@@ -1,0 +1,24 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Icebear
+Bundle-SymbolicName: net.bioclipse.icebear; singleton:=true
+Bundle-Version: 2.5.0.qualifier
+Bundle-Activator: net.bioclipse.icebear.Activator
+Bundle-Vendor: The Bioclipse Team
+Export-Package: net.bioclipse.icebear, net.bioclipse.icebear.business
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ net.bioclipse.core,
+ net.bioclipse.scripting,
+ org.springframework.bundle.spring.aop,
+ net.sf.cglib,
+ org.springframework.osgi.aopalliance.osgi,
+ net.bioclipse.business,
+ net.bioclipse.chemoinformatics,
+ org.eclipse.core.resources,
+ net.bioclipse.cdk.business,
+ net.bioclipse.inchi,
+ net.bioclipse.rdf
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Import-Package: org.apache.log4j
+Bundle-ActivationPolicy: lazy
