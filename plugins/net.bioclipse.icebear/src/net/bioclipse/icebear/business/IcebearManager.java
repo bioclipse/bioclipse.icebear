@@ -19,6 +19,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.bioclipse.business.BioclipsePlatformManager;
 import net.bioclipse.cdk.business.CDKManager;
 import net.bioclipse.cdk.domain.ICDKMolecule;
 import net.bioclipse.core.business.BioclipseException;
@@ -41,12 +42,16 @@ public class IcebearManager implements IBioclipseManager {
 
 	private CDKManager cdk = new CDKManager();
 	private RDFManager rdf = new RDFManager();
+	private BioclipsePlatformManager bioclipse = new BioclipsePlatformManager();
 
     public String getManagerName() {
         return "isbjørn";
     }
 
     public IFile findInfo( IMolecule mol, IFile target, IProgressMonitor monitor) throws BioclipseException, CoreException {
+    	if (!bioclipse.isOnline())
+    		throw new BioclipseException("Searching information on the web requires an active internet connection.");
+
     	if (monitor == null) monitor = new NullProgressMonitor();
 
     	StringWriter writer = new StringWriter();
