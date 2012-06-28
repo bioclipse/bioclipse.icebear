@@ -18,7 +18,9 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.core.resources,
  net.bioclipse.cdk.business,
  net.bioclipse.inchi,
- net.bioclipse.rdf
+ net.bioclipse.rdf,
+ com.hp.hpl.jena.arq;bundle-version="2.8.8",
+ com.hp.hpl.jena;bundle-version="2.6.4"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Import-Package: org.apache.log4j
 Bundle-ActivationPolicy: lazy

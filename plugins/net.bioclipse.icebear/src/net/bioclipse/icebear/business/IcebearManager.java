@@ -27,6 +27,7 @@ import net.bioclipse.core.domain.IMolecule;
 import net.bioclipse.core.domain.IMolecule.Property;
 import net.bioclipse.core.domain.IStringMatrix;
 import net.bioclipse.managers.business.IBioclipseManager;
+import net.bioclipse.rdf.business.IJenaStore;
 import net.bioclipse.rdf.business.IRDFStore;
 import net.bioclipse.rdf.business.RDFManager;
 
@@ -35,6 +36,12 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
+
+import com.hp.hpl.jena.rdf.model.Resource;
+import com.hp.hpl.jena.sparql.vocabulary.FOAF;
+import com.hp.hpl.jena.vocabulary.DC;
+import com.hp.hpl.jena.vocabulary.RDF;
+import com.hp.hpl.jena.vocabulary.RDFS;
 
 public class IcebearManager implements IBioclipseManager {
 
@@ -139,19 +146,58 @@ public class IcebearManager implements IBioclipseManager {
 	}
 
 	private final String LABELS =
-		"SELECT ?label WHERE { <<ROOT>> <http://www.w3.org/2000/01/rdf-schema#label> ?label . }";
+		"SELECT ?label WHERE { <<ROOT>> <" + RDFS.label.toString() + "> ?label . }";
 	private final String HOMEPAGE =
-			"SELECT ?page WHERE { <<ROOT>> <http://xmlns.com/foaf/0.1/homepage> ?page . }";
+			"SELECT ?page WHERE { <<ROOT>> <" + FOAF.homepage.toString() + "> ?page . }";
 	private final String PAGE =
-			"SELECT ?page WHERE { <<ROOT>> <http://xmlns.com/foaf/0.1/page> ?page . }";
+			"SELECT ?page WHERE { <<ROOT>> <" + FOAF.page.toString() + "> ?page . }";
 	private final String DEPICTION =
-			"SELECT ?page WHERE { <<ROOT>> <http://xmlns.com/foaf/0.1/depiction> ?page . }";
-		
+			"SELECT ?page WHERE { <<ROOT>> <" + FOAF.depiction.toString() + "> ?page . }";
+	private final String TYPES =
+			"SELECT ?type WHERE { <<ROOT>> <" + RDF.type.toString() + "> ?type . }";
+	private final String DESCRIPTION =
+			"SELECT ?description WHERE { <<ROOT>> <" + DC.description.toString() + "> ?description . }";
+
 	private void printFoundInformation(PrintWriter pWriter, IRDFStore store, URI ronURI)
 	throws BioclipseException, CoreException {
-		pWriter.println("<h2>" + ronURI.toString() + "</h2>");
+		pWriter.println("<h2>" + ronURI.getHost() +"[<a href=\""+ ronURI.toString() + "\">resource</a>]</h2>");
+		// get the rdf:type's
+		String query = TYPES.replace("<ROOT>", ronURI.toString());
+		try {
+			IStringMatrix types = rdf.sparql(store, query);
+			if (types.getRowCount() > 0) {
+				pWriter.append("<p>");
+				pWriter.println("<b>Types</b> ");
+				StringBuffer buffer = new StringBuffer();
+				for (String type : types.getColumn("type")) {
+					Resource resource = ((IJenaStore)store).getModel().createResource(type);
+					buffer.append("<a href=\"").append(type).append("\">").
+					    append(resource.getLocalName()).append("</a>, ");
+				}
+				String bufferStr = buffer.toString();
+				pWriter.println(bufferStr.substring(0,bufferStr.length()-2));
+				pWriter.append("</p>");
+			}
+		} catch (IOException exception) {
+			logger.warn("Error while quering for labels for " + ronURI, exception);
+		}
+		// get a description
+		query = DESCRIPTION.replace("<ROOT>", ronURI.toString());
+		try {
+			IStringMatrix descriptions = rdf.sparql(store, query);
+			if (descriptions.getRowCount() > 0) {
+				pWriter.println("<b>Descriptions</b><br />");
+				pWriter.append("<p>");
+				for (String desc : descriptions.getColumn("page")) {
+					pWriter.println(desc);
+				}
+				pWriter.append("</p>");
+			}
+		} catch (IOException exception) {
+			logger.warn("Error while quering for labels for " + ronURI, exception);
+		}
 		// get the (home)pages
-		String query = DEPICTION.replace("<ROOT>", ronURI.toString());
+		query = DEPICTION.replace("<ROOT>", ronURI.toString());
 		try {
 			pWriter.append("<p>");
 			IStringMatrix depictions = rdf.sparql(store, query);
@@ -169,8 +215,8 @@ public class IcebearManager implements IBioclipseManager {
 		try {
 			IStringMatrix labels = rdf.sparql(store, query);
 			if (labels.getRowCount() > 0) {
-				pWriter.println("<b>Synonyms</b><br />");
 				pWriter.println("<p>");
+				pWriter.println("<b>Synonyms</b> ");
 				StringBuffer labelString = new StringBuffer();
 				for (String label : labels.getColumn("label")) {
 					labelString.append(label).append(", ");
