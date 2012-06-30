@@ -144,7 +144,7 @@ public class IcebearManager implements IBioclipseManager {
 		pWriter.println("<ul>");
 		try {
 			rdf.importURL(store, uri.toString(), monitor);
-			System.out.println(rdf.dump(store)); // so that I can check what is there...
+			System.out.println(rdf.asRDFN3(store)); // so that I can check what is there...
 			printFoundInformation(pWriter, store, uri);
 			// and recurse
 			List<String> sameResources = rdf.allOwlSameAs(store, uri.toString());
@@ -159,7 +159,7 @@ public class IcebearManager implements IBioclipseManager {
 				}
 			}
 		} catch (Throwable exception) {
-			logger.warn("Something wrong during IO for " + uri.toString(), exception);
+			logger.warn("Something wrong during IO for " + uri.toString() + ": " + exception.getMessage());
 		}
 		pWriter.println("</ul>");
 		monitor.worked(1);
@@ -175,6 +175,8 @@ public class IcebearManager implements IBioclipseManager {
 			"SELECT ?page WHERE { <<ROOT>> <" + FOAF.depiction.toString() + "> ?page . }";
 	private final String TYPES =
 			"SELECT ?type WHERE { <<ROOT>> <" + RDF.type.toString() + "> ?type . }";
+	private final String SUPERCLASSES =
+			"SELECT ?type WHERE { <<ROOT>> <" + RDFS.subClassOf.toString() + "> ?type . }";
 	private final String DESCRIPTION =
 			"SELECT ?description WHERE { <<ROOT>> <" + DC.description.toString() + "> ?description . }";
 
@@ -182,13 +184,20 @@ public class IcebearManager implements IBioclipseManager {
 	throws BioclipseException, CoreException {
 		// get the rdf:type's
 		String query = TYPES.replace("<ROOT>", ronURI.toString());
+		String query2 = SUPERCLASSES.replace("<ROOT>", ronURI.toString());
 		try {
 			IStringMatrix types = rdf.sparql(store, query);
-			if (types.getRowCount() > 0) {
+			IStringMatrix superclasses = rdf.sparql(store, query2);
+			if (types.getRowCount() + superclasses.getRowCount() > 0) {
 				pWriter.append("<p>");
 				pWriter.println("<b>Types</b> ");
 				StringBuffer buffer = new StringBuffer();
 				for (String type : types.getColumn("type")) {
+					Resource resource = ((IJenaStore)store).getModel().createResource(type);
+					buffer.append("<a href=\"").append(type).append("\">").
+					    append(resource.getLocalName()).append("</a>, ");
+				}
+				for (String type : superclasses.getColumn("type")) {
 					Resource resource = ((IJenaStore)store).getModel().createResource(type);
 					buffer.append("<a href=\"").append(type).append("\">").
 					    append(resource.getLocalName()).append("</a>, ");
