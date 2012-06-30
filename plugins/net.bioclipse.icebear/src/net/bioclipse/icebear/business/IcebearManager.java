@@ -60,11 +60,24 @@ public class IcebearManager implements IBioclipseManager {
     		throw new BioclipseException("Searching information on the web requires an active internet connection.");
 
     	if (monitor == null) monitor = new NullProgressMonitor();
+    	monitor.beginTask("Downloading RDF resources", 100);
+    	monitor.worked(1);
 
     	StringWriter writer = new StringWriter();
     	PrintWriter pWriter = new PrintWriter(writer);
     	
     	pWriter.println("<html>");
+    	pWriter.println("  <head>");
+    	pWriter.println("  <title>Isbjørn Report</title>");
+    	pWriter.println("  <style type=\"text/css\">");
+    	pWriter.println("    body {");
+    	pWriter.println("      font-family: Arial, Verdana, Sans-serif;");
+    	pWriter.println("      a:link {color:black;} ");
+    	pWriter.println("      a:hover {color:black; text-decoration:underline;} ");
+    	pWriter.println("      a:visited {color:black;} ");
+    	pWriter.println("    }");
+    	pWriter.println("  </style>");
+    	pWriter.println("  </head>");
     	pWriter.println("<body>");
     	pWriter.println("<h1>Isbjørn Report</h1>");
     	// now, the next should of course use an extension point, but this will have to do for now...
@@ -111,7 +124,7 @@ public class IcebearManager implements IBioclipseManager {
 		} catch (URISyntaxException exception) {
 			throw new BioclipseException("Something wrong with the URI: " + exception.getMessage(), exception);
 		}
-		// also do the non-standard InChI
+		// 2. also do the non-standard InChI
 		inchi = inchi.replace("=1S/", "=1/");
 		try {
 			URI ronURI = new URI("http://rdf.openmolecules.net/?" + inchi);
@@ -121,15 +134,20 @@ public class IcebearManager implements IBioclipseManager {
 		}
 	}
 
-	private void useUniveRsalIcebearPowers(PrintWriter pWriter, URI ronURI, List<String> alreadyDone, IProgressMonitor monitor)
+	private void useUniveRsalIcebearPowers(PrintWriter pWriter, URI uri, List<String> alreadyDone, IProgressMonitor monitor)
 	throws BioclipseException, CoreException {
-		alreadyDone.add(ronURI.toString());
+		alreadyDone.add(uri.toString());
+		monitor.setTaskName("Downloading " + uri.toString());
+		IRDFStore store = rdf.createInMemoryStore();
+		pWriter.println("<h2>" + uri.getHost() +"</h2>");
+		pWriter.println("<p><a href=\""+ uri.toString() + "\">" + uri.toString() + "</a></p>");
+		pWriter.println("<ul>");
 		try {
-			IRDFStore store = rdf.createInMemoryStore();
-			rdf.importURL(store, ronURI.toString(), monitor);
-			printFoundInformation(pWriter, store, ronURI);
+			rdf.importURL(store, uri.toString(), monitor);
+			System.out.println(rdf.dump(store)); // so that I can check what is there...
+			printFoundInformation(pWriter, store, uri);
 			// and recurse
-			List<String> sameResources = rdf.allOwlSameAs(store, ronURI.toString());
+			List<String> sameResources = rdf.allOwlSameAs(store, uri.toString());
 			for (String sameResource : sameResources) {
 				if (!alreadyDone.contains(sameResource)) {
 					try {
@@ -141,8 +159,10 @@ public class IcebearManager implements IBioclipseManager {
 				}
 			}
 		} catch (Throwable exception) {
-			logger.warn("Something wrong during IO for " + ronURI.toString(), exception);
+			logger.warn("Something wrong during IO for " + uri.toString(), exception);
 		}
+		pWriter.println("</ul>");
+		monitor.worked(1);
 	}
 
 	private final String LABELS =
@@ -160,7 +180,6 @@ public class IcebearManager implements IBioclipseManager {
 
 	private void printFoundInformation(PrintWriter pWriter, IRDFStore store, URI ronURI)
 	throws BioclipseException, CoreException {
-		pWriter.println("<h2>" + ronURI.getHost() +"[<a href=\""+ ronURI.toString() + "\">resource</a>]</h2>");
 		// get the rdf:type's
 		String query = TYPES.replace("<ROOT>", ronURI.toString());
 		try {
