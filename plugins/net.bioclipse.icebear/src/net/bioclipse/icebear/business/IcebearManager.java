@@ -157,6 +157,18 @@ public class IcebearManager implements IBioclipseManager {
 					}
 				}
 			}
+			// and recurse more: owl:equivalentClass
+			sameResources = rdf.allOwlEquivalentClass(store, uri.toString());
+			for (String sameResource : sameResources) {
+				if (!alreadyDone.contains(sameResource)) {
+					try {
+						URI sameURI = new URI(sameResource);
+						useUniveRsalIcebearPowers(pWriter, sameURI, alreadyDone, monitor);	
+					} catch (URISyntaxException exception) {
+						// ignore resource
+					}
+				}
+			}
 		} catch (Throwable exception) {
 			logger.warn("Something wrong during IO for " + uri.toString() + ": " + exception.getMessage());
 		}
