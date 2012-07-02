@@ -226,6 +226,25 @@ public class IcebearManager implements IBioclipseManager {
 		} catch (Exception exception) {
 			logger.warn("Error while quering for labels for " + ronURI, exception);
 		}
+		// get the identifiers
+		try {
+			List<String> identifiers = rdf.getForPredicate(store, ronURI.toString(), DC.identifier.toString());
+			identifiers.addAll(rdf.getForPredicate(store, ronURI.toString(), DC_10.identifier.toString()));
+			identifiers.addAll(rdf.getForPredicate(store, ronURI.toString(), DC_11.identifier.toString()));
+			if (identifiers.size() > 0) {
+				pWriter.println("<p>");
+				pWriter.println("<b>Identifiers</b> ");
+				StringBuffer idString = new StringBuffer();
+				for (String identifier : identifiers) {
+					idString.append(identifier).append(", ");
+				}
+				String fullString = idString.toString();
+				pWriter.println(fullString.substring(0, fullString.length()-2));
+				pWriter.println("</p>");
+			}
+		} catch (Exception exception) {
+			logger.warn("Error while quering for labels for " + ronURI, exception);
+		}
 		// get the labels
 		try {
 			List<String> labels = rdf.getForPredicate(store, ronURI.toString(), RDFS.label.toString());
