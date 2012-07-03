@@ -11,7 +11,6 @@
 package net.bioclipse.icebear.business;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URI;
@@ -314,7 +313,7 @@ public class IcebearManager implements IBioclipseManager {
 			String string, String string2) {
 		if (results.getRowCount() > 0) {
 			pWriter.println("<table border='0'>");
-			for (int i=0; i<results.getRowCount(); i++) {
+			for (int i=1; i<=results.getRowCount(); i++) {
 				pWriter.println("  <tr>");
 				pWriter.println("    <td><b>" + results.get(i, string) + "</b></td>");
 				pWriter.println("    <td>" + results.get(i, string2) + "</td>");
