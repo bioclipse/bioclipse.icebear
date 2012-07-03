@@ -243,8 +243,12 @@ public class IcebearManager implements IBioclipseManager {
 				pWriter.println("<p>");
 				pWriter.println("<b>Identifiers</b> ");
 				StringBuffer idString = new StringBuffer();
+				List<String> processedIdentifiers = new ArrayList<String>();
 				for (String identifier : identifiers) {
-					idString.append(identifier).append(", ");
+					if (!processedIdentifiers.contains(identifier)) {
+						idString.append(identifier).append(", ");
+						processedIdentifiers.add(identifier);
+					}
 				}
 				String fullString = idString.toString();
 				pWriter.println(fullString.substring(0, fullString.length()-2));
