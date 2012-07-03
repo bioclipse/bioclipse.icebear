@@ -291,5 +291,36 @@ public class IcebearManager implements IBioclipseManager {
 		} catch (Exception exception) {
 			logger.warn("Error while quering for labels for " + ronURI, exception);
 		}
+		// get ChemAxiom properties (for a chemical species)
+		if (ronURI.toString().startsWith("http://www.chemspider.com/")) {
+			final String sparql =
+				"PREFIX chemdomain:  <http://www.polymerinformatics.com/ChemAxiom/ChemDomain.owl#>\n" +
+				"SELECT ?type ?value WHERE {" +
+				"  <" + ronURI.toString() + "> chemdomain:hasPart ?part ." +
+				"  ?part chemdomain:hasIdentifier ?ident ." +
+				"  ?ident chemdomain:hasValue ?value ;" +
+				"    a ?type . " +
+				"}";
+			try {
+				StringMatrix results = rdf.sparql(store, sparql);
+				outputTable(pWriter, results, "type", "value");
+			} catch (Exception exception) {
+				logger.debug("Error while finding ChemAxiom properties: " + exception.getMessage(), exception);
+			}
+		}
+	}
+
+	private void outputTable(PrintWriter pWriter, StringMatrix results,
+			String string, String string2) {
+		if (results.getRowCount() > 0) {
+			pWriter.println("<table border='0'>");
+			for (int i=0; i<results.getRowCount(); i++) {
+				pWriter.println("  <tr>");
+				pWriter.println("    <td><b>" + results.get(i, string) + "</b></td>");
+				pWriter.println("    <td>" + results.get(i, string2) + "</td>");
+				pWriter.println("  </tr>");
+			}
+			pWriter.println("</table>");
+		}
 	}
 }
