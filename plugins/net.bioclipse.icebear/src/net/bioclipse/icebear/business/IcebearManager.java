@@ -11,6 +11,7 @@
 package net.bioclipse.icebear.business;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URI;
@@ -24,6 +25,7 @@ import net.bioclipse.cdk.domain.ICDKMolecule;
 import net.bioclipse.core.business.BioclipseException;
 import net.bioclipse.core.domain.IMolecule;
 import net.bioclipse.core.domain.IMolecule.Property;
+import net.bioclipse.core.domain.StringMatrix;
 import net.bioclipse.managers.business.IBioclipseManager;
 import net.bioclipse.rdf.business.IJenaStore;
 import net.bioclipse.rdf.business.IRDFStore;
@@ -114,6 +116,7 @@ public class IcebearManager implements IBioclipseManager {
 	private void useIcebearPowers(IMolecule mol, PrintWriter pWriter, List<String> alreadyDone, IProgressMonitor monitor)
 	throws BioclipseException, CoreException {
 		if (alreadyDone == null) alreadyDone = new ArrayList<String>();
+		alreadyDone.add("http://bio2rdf.org/chebi:15377"); // blacklist water
 		// so, what are the isbjørn powers then?
 		// 1. use the InChI to get URIs
 		ICDKMolecule cdkMol = cdk.asCDKMolecule(mol);
