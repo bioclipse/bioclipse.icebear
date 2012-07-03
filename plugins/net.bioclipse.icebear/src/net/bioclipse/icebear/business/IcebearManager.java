@@ -307,6 +307,21 @@ public class IcebearManager implements IBioclipseManager {
 				logger.debug("Error while finding ChemAxiom properties: " + exception.getMessage(), exception);
 			}
 		}
+		// get CHEMINF properties
+		final String sparql =
+			"PREFIX resource:  <http://semanticscience.org/resource/>\n" +
+			"SELECT ?type ?value WHERE {" +
+			"  <" + ronURI.toString() + "> resource:CHEMINF_000200 ?desc ." +
+			"  ?desc resource:SIO_000300 ?value ;" +
+			"    a ?type . " +
+			"}";
+		try {
+			StringMatrix results = rdf.sparql(store, sparql);
+			System.out.println("results: " + results);
+			outputTable(pWriter, results, "type", "value");
+		} catch (Exception exception) {
+			logger.debug("Error while finding CHEMINF properties: " + exception.getMessage(), exception);
+		}
 	}
 
 	private void outputTable(PrintWriter pWriter, StringMatrix results,
