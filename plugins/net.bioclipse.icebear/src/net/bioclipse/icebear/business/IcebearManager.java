@@ -151,6 +151,11 @@ public class IcebearManager implements IBioclipseManager {
 			// and recurse: owl:sameAs
 			List<String> sameResources = rdf.allOwlSameAs(store, uri.toString());
 			for (String sameResource : sameResources) {
+				// OK, work around a bug in rdf.openmolecules.net
+				if (sameResource.startsWith("http://www.chemspider.com/Chemical-Structure.") &&
+					sameResource.endsWith(".rdf")) {
+					sameResource = sameResource + "#Compound";
+				}
 				if (!alreadyDone.contains(sameResource)) {
 					try {
 						URI sameURI = new URI(sameResource);
