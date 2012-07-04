@@ -16,7 +16,9 @@ import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import net.bioclipse.business.BioclipsePlatformManager;
 import net.bioclipse.cdk.business.CDKManager;
@@ -239,6 +241,7 @@ public class IcebearManager implements IBioclipseManager {
 		// get visualizations
 		try {
 			List<String> depictions = rdf.getForPredicate(store, ronURI.toString(), FOAF.depiction.toString());
+			depictions.addAll(rdf.getForPredicate(store, ronURI.toString(), "http://bio2rdf.org/bio2rdf_resource:image"));
 			if (depictions.size() > 0) {
 				pWriter.append("<p>");
 				for (String depiction : depictions) {
@@ -275,6 +278,7 @@ public class IcebearManager implements IBioclipseManager {
 		// get the labels
 		try {
 			List<String> labels = rdf.getForPredicate(store, ronURI.toString(), RDFS.label.toString());
+			labels.addAll(rdf.getForPredicate(store, ronURI.toString(), "http://bio2rdf.org/obo_resource:synonym"));
 			if (labels.size() > 0) {
 				pWriter.println("<p>");
 				pWriter.println("<b>Synonyms</b> ");
@@ -326,6 +330,7 @@ public class IcebearManager implements IBioclipseManager {
 		// get CHEMINF properties
 		final String sparql =
 			"PREFIX resource:  <http://semanticscience.org/resource/>\n" +
+			"PREFIX pubchem: <http://pubchem.ncbi.nlm.nih.gov/rest/rdf/DESCRIPTION_>\n" +
 			"SELECT ?type ?value WHERE {" +
 			"  <" + ronURI.toString() + "> resource:CHEMINF_000200 ?desc ." +
 			"  ?desc resource:SIO_000300 ?value ;" +
@@ -333,10 +338,31 @@ public class IcebearManager implements IBioclipseManager {
 			"}";
 		try {
 			StringMatrix results = rdf.sparql(store, sparql);
-			System.out.println("results: " + results);
 			outputTable(pWriter, results, "type", "value");
 		} catch (Exception exception) {
 			logger.debug("Error while finding CHEMINF properties: " + exception.getMessage(), exception);
+		}
+		// get Bio2RDF properties
+		if (ronURI.toString().startsWith("http://bio2rdf.org/")) {
+			Map<String,String> resultMap = new HashMap<String, String>();
+			addPredicateToMap(store, resultMap, "Mass", ronURI.toString(), "http://bio2rdf.org/bio2rdf_resource:mass");
+			addPredicateToMap(store, resultMap, "SMILES", ronURI.toString(), "http://bio2rdf.org/bio2rdf_resource:smiles");
+			addPredicateToMap(store, resultMap, "Conjugate Base", ronURI.toString(), "http://bio2rdf.org/bio2rdf_resource:is_conjugate_base_of");
+			addPredicateToMap(store, resultMap, "Functional Parent", ronURI.toString(), "http://bio2rdf.org/bio2rdf_resource:has_functional_parent");
+			addPredicateToMap(store, resultMap, "Charge", ronURI.toString(), "http://bio2rdf.org/bio2rdf_resource:charge");
+			addPredicateToMap(store, resultMap, "Formula", ronURI.toString(), "http://bio2rdf.org/bio2rdf_resource:formula");
+			addPredicateToMap(store, resultMap, "IUPAC name", ronURI.toString(), "http://bio2rdf.org/bio2rdf_resource:iupacName");
+			outputTable(pWriter, resultMap);
+		}
+	}
+
+	// only works for one property per predicate
+	private void addPredicateToMap(IRDFStore store, Map<String, String> resultMap, String label, String resource, String predicate) {
+		try {
+			List<String> props = rdf.getForPredicate(store, resource, predicate);
+			if (props.size() > 0) resultMap.put(label, props.get(0));
+		} catch (BioclipseException exception) {
+			logger.debug("Error while getting Bio2RDF props: " + exception.getMessage(), exception);
 		}
 	}
 
@@ -348,6 +374,19 @@ public class IcebearManager implements IBioclipseManager {
 				pWriter.println("  <tr>");
 				pWriter.println("    <td><b>" + results.get(i, string) + "</b></td>");
 				pWriter.println("    <td>" + results.get(i, string2) + "</td>");
+				pWriter.println("  </tr>");
+			}
+			pWriter.println("</table>");
+		}
+	}
+
+	private void outputTable(PrintWriter pWriter, Map<String,String> results) {
+		if (results.size() > 0) {
+			pWriter.println("<table border='0'>");
+			for (String key : results.keySet()) {
+				pWriter.println("  <tr>");
+				pWriter.println("    <td><b>" + key + "</b></td>");
+				pWriter.println("    <td>" + results.get(key) + "</td>");
 				pWriter.println("  </tr>");
 			}
 			pWriter.println("</table>");
