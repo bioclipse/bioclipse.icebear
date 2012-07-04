@@ -48,6 +48,8 @@ import com.hp.hpl.jena.vocabulary.RDFS;
 
 public class IcebearManager implements IBioclipseManager {
 
+	private static final String ICON = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAFZJREFUeF59z4EJADEIQ1F36k7u5E7ZKXeUQPACJ3wK7UNokVxVk9kHnQH7bY9hbDyDhNXgjpRLqFlo4M2GgfyJHhjq8V4agfrgPQX3JtJQGbofmCHgA/nAKks+JAjFAAAAAElFTkSuQmCC";
+	
 	private static final Logger logger = Logger.getLogger(IcebearManager.class);
 
 	private CDKManager cdk = new CDKManager();
@@ -144,8 +146,10 @@ public class IcebearManager implements IBioclipseManager {
 		alreadyDone.add(uri.toString());
 		monitor.setTaskName("Downloading " + uri.toString());
 		IRDFStore store = rdf.createInMemoryStore();
-		pWriter.println("<h2>" + uri.getHost() +"</h2>");
-		pWriter.println("<p><a href=\""+ uri.toString() + "\">" + uri.toString() + "</a></p>");
+		if (uri.getHost() == null) return; // ignore
+		pWriter.println(
+			"<h2>" + uri.getHost() + " <a href=\""+ uri.toString() + "\">" +
+			"<img border=0 src=\"" + ICON + "\" /></a></h2>");
 		pWriter.println("<ul>");
 		try {
 			rdf.importURL(store, uri.toString(), monitor);
