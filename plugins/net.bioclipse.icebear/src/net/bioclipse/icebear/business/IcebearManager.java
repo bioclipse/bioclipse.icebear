@@ -347,8 +347,8 @@ public class IcebearManager implements IBioclipseManager {
 			Map<String,String> resultMap = new HashMap<String, String>();
 			addPredicateToMap(store, resultMap, "Mass", ronURI.toString(), "http://bio2rdf.org/bio2rdf_resource:mass");
 			addPredicateToMap(store, resultMap, "SMILES", ronURI.toString(), "http://bio2rdf.org/bio2rdf_resource:smiles");
-			addPredicateToMap(store, resultMap, "Conjugate Base", ronURI.toString(), "http://bio2rdf.org/bio2rdf_resource:is_conjugate_base_of");
-			addPredicateToMap(store, resultMap, "Functional Parent", ronURI.toString(), "http://bio2rdf.org/bio2rdf_resource:has_functional_parent");
+			addPredicateToMap(store, resultMap, "Conjugate Base", ronURI.toString(), "http://bio2rdf.org/obo_resource:is_conjugate_base_of");
+			addPredicateToMap(store, resultMap, "Functional Parent", ronURI.toString(), "http://bio2rdf.org/obo_resource:has_functional_parent");
 			addPredicateToMap(store, resultMap, "Charge", ronURI.toString(), "http://bio2rdf.org/bio2rdf_resource:charge");
 			addPredicateToMap(store, resultMap, "Formula", ronURI.toString(), "http://bio2rdf.org/bio2rdf_resource:formula");
 			addPredicateToMap(store, resultMap, "IUPAC name", ronURI.toString(), "http://bio2rdf.org/bio2rdf_resource:iupacName");
