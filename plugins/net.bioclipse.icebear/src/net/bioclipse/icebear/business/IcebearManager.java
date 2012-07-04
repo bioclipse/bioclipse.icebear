@@ -28,7 +28,6 @@ import net.bioclipse.core.domain.IMolecule;
 import net.bioclipse.core.domain.IMolecule.Property;
 import net.bioclipse.core.domain.StringMatrix;
 import net.bioclipse.managers.business.IBioclipseManager;
-import net.bioclipse.rdf.business.IJenaStore;
 import net.bioclipse.rdf.business.IRDFStore;
 import net.bioclipse.rdf.business.RDFManager;
 
@@ -38,12 +37,10 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 
-import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.sparql.vocabulary.FOAF;
 import com.hp.hpl.jena.vocabulary.DC;
 import com.hp.hpl.jena.vocabulary.DC_10;
 import com.hp.hpl.jena.vocabulary.DC_11;
-import com.hp.hpl.jena.vocabulary.RDF;
 import com.hp.hpl.jena.vocabulary.RDFS;
 
 public class IcebearManager implements IBioclipseManager {
@@ -318,7 +315,7 @@ public class IcebearManager implements IBioclipseManager {
 
 	private void printFoundInformation(PrintWriter pWriter, IRDFStore store, URI ronURI) {
 		// get the rdf:type's
-		try {
+		/* try {
 			List<String> types = rdf.getForPredicate(store, ronURI.toString(), RDF.type.toString());
 			types.addAll(rdf.getForPredicate(store, ronURI.toString(), RDFS.subClassOf.toString()));
 			if (types.size() > 0) {
@@ -336,7 +333,7 @@ public class IcebearManager implements IBioclipseManager {
 			}
 		} catch (Exception exception) {
 			logger.warn("Error while quering for labels for " + ronURI, exception);
-		}
+		} */
 		// get a description
 		try {
 			List<String> descriptions = rdf.getForPredicate(store, ronURI.toString(), DC.description.toString());
