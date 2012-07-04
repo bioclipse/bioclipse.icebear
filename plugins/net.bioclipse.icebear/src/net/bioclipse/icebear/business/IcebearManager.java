@@ -72,6 +72,7 @@ public class IcebearManager implements IBioclipseManager {
     	pWriter.println("<html>");
     	pWriter.println("  <head>");
     	pWriter.println("  <title>Isbjørn Report</title>");
+    	pWriter.println("  <meta http-equiv=\"Content-Type\" content=\"text/html;charset=utf-8\">");
     	pWriter.println("  <style type=\"text/css\">");
     	pWriter.println("    body {");
     	pWriter.println("      font-family: Arial, Verdana, Sans-serif;");
