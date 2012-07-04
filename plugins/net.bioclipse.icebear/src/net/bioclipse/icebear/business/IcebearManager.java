@@ -142,7 +142,10 @@ public class IcebearManager implements IBioclipseManager {
 	}
 
 	private void useUniveRsalIcebearPowers(PrintWriter pWriter, URI uri, List<String> alreadyDone, IProgressMonitor monitor) {
-		if (uri.toString().startsWith("http://data.linkedct.org")) return; // ignore LinkedCT which is broken
+		if (uri.toString().startsWith("http://data.linkedct.org") ||
+		    uri.toString().startsWith("http://bio2rdf.org/linkedct_intervention")) {
+			return; // ignore LinkedCT which is broken
+		}
 		alreadyDone.add(uri.toString());
 		monitor.setTaskName("Downloading " + uri.toString());
 		IRDFStore store = rdf.createInMemoryStore();
