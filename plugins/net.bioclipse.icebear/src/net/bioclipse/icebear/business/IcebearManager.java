@@ -139,6 +139,7 @@ public class IcebearManager implements IBioclipseManager {
 	}
 
 	private void useUniveRsalIcebearPowers(PrintWriter pWriter, URI uri, List<String> alreadyDone, IProgressMonitor monitor) {
+		if (uri.toString().startsWith("http://data.linkedct.org")) return; // ignore LinkedCT which is broken
 		alreadyDone.add(uri.toString());
 		monitor.setTaskName("Downloading " + uri.toString());
 		IRDFStore store = rdf.createInMemoryStore();
@@ -194,11 +195,105 @@ public class IcebearManager implements IBioclipseManager {
 					}
 				} catch (BioclipseException exeption) {} // just ignore
 			}
+			// get identifiers from DBPedia
+			if (uri.toString().startsWith("http://dbpedia.org/resource")) {
+				try {
+					List<String> casNumbers = rdf.getForPredicate(store, uri.toString(), "http://dbpedia.org/ontology/casNumber");
+					for (String cas : casNumbers) {
+						System.out.println("CAS reg number: " + cas);
+						// recurse
+						try {
+							URI sameURI = new URI("http://bio2rdf.org/cas:" + cas);
+							useUniveRsalIcebearPowers(pWriter, sameURI, alreadyDone, monitor);	
+						} catch (URISyntaxException exception) {
+							logger.debug("Error while getting the CAS RDF: " + exception.getMessage(), exception);
+						}
+					}
+				} catch (BioclipseException exeption) {} // just ignore
+				try {
+					List<String> drugBankIDs = rdf.getForPredicate(store, uri.toString(), "http://dbpedia.org/ontology/drugbank");
+					for (String drugbank : drugBankIDs) {
+						System.out.println("Drugbank code: " + drugbank);
+						// recurse
+						try {
+							URI sameURI = new URI("http://bio2rdf.org/drugbank_drugs:" + drugbank);
+							useUniveRsalIcebearPowers(pWriter, sameURI, alreadyDone, monitor);	
+						} catch (URISyntaxException exception) {
+							logger.debug("Error while getting the DrugBank RDF: " + exception.getMessage(), exception);
+						}
+					}
+				} catch (BioclipseException exeption) {} // just ignore
+				try {
+					List<String> ids = rdf.getForPredicate(store, uri.toString(), "http://dbpedia.org/ontology/pubchem");
+					for (String id : ids) {
+						System.out.println("PubChem: " + id);
+						// recurse
+						try {
+							URI sameURI = new URI("http://pubchem.ncbi.nlm.nih.gov/rest/rdf/PUBCHEM_CID" + id);
+							useUniveRsalIcebearPowers(pWriter, sameURI, alreadyDone, monitor);	
+						} catch (URISyntaxException exception) {
+							logger.debug("Error while getting the PubChem RDF: " + exception.getMessage(), exception);
+						}
+					}
+				} catch (BioclipseException exeption) {} // just ignore
+				try {
+					List<String> ids = rdf.getForPredicate(store, uri.toString(), "http://dbpedia.org/property/chembl");
+					for (String id : ids) {
+						id = stripDataType(id);
+						System.out.println("CHEMBL: " + id);
+						// recurse
+						try {
+							URI sameURI = new URI("http://data.kasabi.com/dataset/chembl-rdf/chemblid/CHEMBL" + id);
+							useUniveRsalIcebearPowers(pWriter, sameURI, alreadyDone, monitor);	
+						} catch (URISyntaxException exception) {
+							logger.debug("Error while getting the ChEMBL-RDF: " + exception.getMessage(), exception);
+						}
+					}
+				} catch (BioclipseException exeption) {} // just ignore
+				try {
+					List<String> ids = rdf.getForPredicate(store, uri.toString(), "http://dbpedia.org/property/chebi");
+					for (String id : ids) {
+						id = stripDataType(id);
+						System.out.println("ChEBI: " + id);
+						// recurse
+						try {
+							URI sameURI = new URI("http://bio2rdf.org/chebi:" + id);
+							useUniveRsalIcebearPowers(pWriter, sameURI, alreadyDone, monitor);	
+						} catch (URISyntaxException exception) {
+							logger.debug("Error while getting the ChEMBL-RDF: " + exception.getMessage(), exception);
+						}
+					}
+				} catch (BioclipseException exeption) {} // just ignore
+				try {
+					List<String> ids = rdf.getForPredicate(store, uri.toString(), "http://dbpedia.org/property/kegg");
+					for (String id : ids) {
+						System.out.println("KEGG: " + id);
+						// recurse
+						try {
+							if (id.startsWith("C")) {
+								URI sameURI = new URI("http://bio2rdf.org/cpd:" + id);
+								useUniveRsalIcebearPowers(pWriter, sameURI, alreadyDone, monitor);	
+							} else if (id.startsWith("D")) {
+								URI sameURI = new URI("http://bio2rdf.org/dr:" + id);
+								useUniveRsalIcebearPowers(pWriter, sameURI, alreadyDone, monitor);	
+							}
+						} catch (URISyntaxException exception) {
+							logger.debug("Error while getting the KEGG RDF: " + exception.getMessage(), exception);
+						}
+					}
+				} catch (BioclipseException exeption) {} // just ignore
+			}
 		} catch (Throwable exception) {
 			logger.warn("Something wrong during IO for " + uri.toString() + ": " + exception.getMessage());
 		}
 		pWriter.println("</ul>");
 		monitor.worked(1);
+	}
+
+	private String stripDataType(String id) {
+		if (id.contains("^^"))
+			return id.substring(0, id.indexOf("^^"));
+		return id;
 	}
 
 	private void printFoundInformation(PrintWriter pWriter, IRDFStore store, URI ronURI) {
@@ -227,6 +322,7 @@ public class IcebearManager implements IBioclipseManager {
 			List<String> descriptions = rdf.getForPredicate(store, ronURI.toString(), DC.description.toString());
 			descriptions.addAll(rdf.getForPredicate(store, ronURI.toString(), DC_10.description.toString()));
 			descriptions.addAll(rdf.getForPredicate(store, ronURI.toString(), DC_11.description.toString()));
+			descriptions.addAll(rdf.getForPredicate(store, ronURI.toString(), "http://www.w3.org/2004/02/skos/core#definition"));
 			if (descriptions.size() > 0) {
 				pWriter.println("<b>Descriptions</b><br />");
 				for (String desc : descriptions) {
@@ -279,6 +375,8 @@ public class IcebearManager implements IBioclipseManager {
 		try {
 			List<String> labels = rdf.getForPredicate(store, ronURI.toString(), RDFS.label.toString());
 			labels.addAll(rdf.getForPredicate(store, ronURI.toString(), "http://bio2rdf.org/obo_resource:synonym"));
+			labels.addAll(rdf.getForPredicate(store, ronURI.toString(), "http://www.w3.org/2004/02/skos/core#prefLabel"));
+			labels.addAll(rdf.getForPredicate(store, ronURI.toString(), "http://www.w3.org/2004/02/skos/core#altLabel"));
 			if (labels.size() > 0) {
 				pWriter.println("<p>");
 				pWriter.println("<b>Synonyms</b> ");
@@ -354,6 +452,24 @@ public class IcebearManager implements IBioclipseManager {
 			addPredicateToMap(store, resultMap, "IUPAC name", ronURI.toString(), "http://bio2rdf.org/bio2rdf_resource:iupacName");
 			outputTable(pWriter, resultMap);
 		}
+		// get DBPedia properties
+		if (ronURI.toString().startsWith("http://dbpedia.org/resource/")) {
+			Map<String,String> resultMap = new HashMap<String, String>();
+			addPredicateToMap(store, resultMap, "Administration", ronURI.toString(), "http://dbpedia.org/property/routesOfAdministration");
+			addPredicateToMap(store, resultMap, "Bioavailability", ronURI.toString(), "http://dbpedia.org/property/bioavailability");
+			addPredicateToMap(store, resultMap, "Boiling point", ronURI.toString(), "http://dbpedia.org/property/boilingPoint");
+			addPredicateToMap(store, resultMap, "Melting point", ronURI.toString(), "http://dbpedia.org/property/meltingPoint");
+			outputTable(pWriter, resultMap);
+		}
+		// get FreeBase properties
+		if (ronURI.toString().startsWith("http://rdf.freebase.com/ns/")) {
+			Map<String,String> resultMap = new HashMap<String, String>();
+			addPredicateToMap(store, resultMap, "Average molar mass", ronURI.toString(), "http://rdf.freebase.com/ns/chemistry.chemical_compound.average_molar_mass");
+			addPredicateToMap(store, resultMap, "Boiling point", ronURI.toString(), "http://rdf.freebase.com/ns/chemistry.chemical_compound.boiling_point");
+			addPredicateToMap(store, resultMap, "Melting point", ronURI.toString(), "http://rdf.freebase.com/ns/chemistry.chemical_compound.melting_point");
+			addPredicateToMap(store, resultMap, "Density", ronURI.toString(), "http://rdf.freebase.com/ns/chemistry.chemical_compound.density");
+			outputTable(pWriter, resultMap);
+		}
 	}
 
 	// only works for one property per predicate
@@ -386,7 +502,8 @@ public class IcebearManager implements IBioclipseManager {
 			for (String key : results.keySet()) {
 				pWriter.println("  <tr>");
 				pWriter.println("    <td><b>" + key + "</b></td>");
-				pWriter.println("    <td>" + results.get(key) + "</td>");
+				String property = stripDataType(results.get(key));
+				pWriter.println("    <td>" + property + "</td>");
 				pWriter.println("  </tr>");
 			}
 			pWriter.println("</table>");
