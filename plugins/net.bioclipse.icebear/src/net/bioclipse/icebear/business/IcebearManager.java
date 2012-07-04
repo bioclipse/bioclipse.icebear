@@ -176,6 +176,22 @@ public class IcebearManager implements IBioclipseManager {
 					}
 				}
 			}
+			// get the PubChem identifier
+			if (uri.toString().startsWith("http://rdf.openmolecules.net/")) {
+				try {
+					List<String> cids = rdf.getForPredicate(store, uri.toString(), "http://pubchem.ncbi.nlm.nih.gov/#cid");
+					for (String cid : cids) {
+						System.out.println("PubChem CID: " + cid);
+						// recurse
+						try {
+							URI sameURI = new URI("http://pubchem.ncbi.nlm.nih.gov/rest/rdf/PUBCHEM_CID" + cid);
+							useUniveRsalIcebearPowers(pWriter, sameURI, alreadyDone, monitor);	
+						} catch (URISyntaxException exception) {
+							logger.debug("Error while getting the PubChem RDF: " + exception.getMessage(), exception);
+						}
+					}
+				} catch (BioclipseException exeption) {} // just ignore
+			}
 		} catch (Throwable exception) {
 			logger.warn("Something wrong during IO for " + uri.toString() + ": " + exception.getMessage());
 		}
