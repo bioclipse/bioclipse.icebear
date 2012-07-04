@@ -187,6 +187,18 @@ public class IcebearManager implements IBioclipseManager {
 					}
 				}
 			}
+			// and recurse more: skos:exactMatch
+			sameResources = rdf.getForPredicate(store, uri.toString(), "http://www.w3.org/2004/02/skos/core#exactMatch");
+			for (String sameResource : sameResources) {
+				if (!alreadyDone.contains(sameResource)) {
+					try {
+						URI sameURI = new URI(sameResource);
+						useUniveRsalIcebearPowers(pWriter, sameURI, alreadyDone, monitor);	
+					} catch (URISyntaxException exception) {
+						// ignore resource
+					}
+				}
+			}
 			// get the PubChem identifier
 			if (uri.toString().startsWith("http://rdf.openmolecules.net/")) {
 				try {
