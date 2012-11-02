@@ -17,6 +17,7 @@ import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -76,6 +77,8 @@ public class IcebearManager implements IBioclipseManager {
 		put("http://xmlns.com/foaf/0.1/Document", "document");
 		put("http://bio2rdf.org/drugbank_drugtype:approved", "approved drug");
 		put("http://bio2rdf.org/drugbank_drugtype:smallMolecule", "small molecule");
+		put("http://purl.obolibrary.org/obo/CHEBI_23367", "molecular entity");
+		put("http://www.opentox.org/api/1.1#Compound", "compound");
 
 		// and also ignore often used things we like to ignore
 		ignore("http://bio2rdf.org/obo_resource:term");
@@ -88,11 +91,18 @@ public class IcebearManager implements IBioclipseManager {
 		ignore("http://www4.wiwiss.fu-berlin.de/drugbank/vocab/resource/class/Offer");
 		ignore("http://www.w3.org/2000/01/rdf-schema#Class");
 		ignore("http://www.w3.org/2000/01/rdf-schema#Resource");
+		ignore("http://www.opentox.org/api/1.1#Dataset");
 	}
 		public void ignore(String resource) {
 			put(resource, null);
 		}
 	};
+
+	Map<String,String> extraHeaders = new HashMap<String, String>() {
+		private static final long serialVersionUID = 2825983879781792266L;
+	{
+	  put("Content-Type", "application/rdf+xml");
+	}};
 
     public String getManagerName() {
         return "isbjørn";
@@ -155,7 +165,64 @@ public class IcebearManager implements IBioclipseManager {
     	return target;
     }
 
-	private void useIcebearPowers(IMolecule mol, PrintWriter pWriter, List<String> alreadyDone, IProgressMonitor monitor)
+    public IFile findInfo( String uri, IFile target, IProgressMonitor monitor) throws BioclipseException, CoreException {
+    	if (!bioclipse.isOnline())
+    		throw new BioclipseException("Searching information on the web requires an active internet connection.");
+
+    	if (monitor == null) monitor = new NullProgressMonitor();
+    	monitor.beginTask("Downloading RDF resources", 100);
+    	monitor.worked(1);
+
+    	StringWriter writer = new StringWriter();
+    	PrintWriter pWriter = new PrintWriter(writer);
+    	
+    	pWriter.println("<html>");
+    	pWriter.println("  <head>");
+    	pWriter.println("  <title>Isbjørn Report</title>");
+    	pWriter.println("  <meta http-equiv=\"Content-Type\" content=\"text/html;charset=utf-8\">");
+    	pWriter.println("  <style type=\"text/css\">");
+    	pWriter.println("    body {");
+    	pWriter.println("      font-family: Arial, Verdana, Sans-serif;");
+    	pWriter.println("      a:link {color:black;} ");
+    	pWriter.println("      a:hover {color:black; text-decoration:underline;} ");
+    	pWriter.println("      a:visited {color:black;} ");
+    	pWriter.println("    }");
+    	pWriter.println("  </style>");
+    	pWriter.println("  </head>");
+    	pWriter.println("<body>");
+    	pWriter.println("<h1>Isbjørn Report</h1>");
+    	// now, the next should of course use an extension point, but this will have to do for now...
+    	useIcebearPowers(uri, pWriter, null, monitor);
+    	pWriter.println("<html>");
+    	pWriter.println("</body>");
+    	pWriter.println("</html>");
+    	pWriter.flush();
+
+    	try {
+    		if (target.exists()) {
+    			target.setContents(
+                    new ByteArrayInputStream(writer.toString()
+                        .getBytes("UTF-8")),
+                        false,
+                        true, // overwrite
+                        monitor
+                );
+            } else {
+            	target.create(
+            		new ByteArrayInputStream(writer.toString()
+            			.getBytes("UTF-8")),
+           			false,
+ 					monitor
+            	);
+            }
+    	} catch (Exception encodingExeption) {
+    		throw new BioclipseException("Error encoding problem: " + encodingExeption.getMessage(), encodingExeption);
+    	}
+    	
+    	return target;
+    }
+
+    private void useIcebearPowers(IMolecule mol, PrintWriter pWriter, List<String> alreadyDone, IProgressMonitor monitor)
 	throws BioclipseException, CoreException {
 		if (alreadyDone == null) alreadyDone = new ArrayList<String>();
 		alreadyDone.add("http://bio2rdf.org/chebi:15377"); // blacklist water
@@ -163,16 +230,19 @@ public class IcebearManager implements IBioclipseManager {
 		// 1. use the InChI to get URIs
 		ICDKMolecule cdkMol = cdk.asCDKMolecule(mol);
 		String inchi = cdkMol.getInChI(Property.USE_CACHED_OR_CALCULATED);
-		try {
-			URI ronURI = new URI("http://rdf.openmolecules.net/?" + inchi);
-			useUniveRsalIcebearPowers(pWriter, ronURI, alreadyDone, monitor);
-		} catch (URISyntaxException exception) {
-			throw new BioclipseException("Something wrong with the URI: " + exception.getMessage(), exception);
-		}
+		String uri = "http://rdf.openmolecules.net/?" + inchi;
+		useIcebearPowers(uri, pWriter, alreadyDone, monitor);
 		// 2. also do the non-standard InChI
 		inchi = inchi.replace("=1S/", "=1/");
+		uri = "http://rdf.openmolecules.net/?" + inchi;
+		useIcebearPowers(uri, pWriter, alreadyDone, monitor);
+	}
+
+	private void useIcebearPowers(String uriString, PrintWriter pWriter, List<String> alreadyDone, IProgressMonitor monitor)
+	throws BioclipseException, CoreException {
+		if (alreadyDone == null) alreadyDone = new ArrayList<String>();
 		try {
-			URI ronURI = new URI("http://rdf.openmolecules.net/?" + inchi);
+			URI ronURI = new URI(uriString);
 			useUniveRsalIcebearPowers(pWriter, ronURI, alreadyDone, monitor);
 		} catch (URISyntaxException exception) {
 			throw new BioclipseException("Something wrong with the URI: " + exception.getMessage(), exception);
@@ -190,6 +260,7 @@ public class IcebearManager implements IBioclipseManager {
 		
 		alreadyDone.add(uri.toString());
 		monitor.setTaskName("Downloading " + uri.toString());
+		System.out.println("Downloading " + uri.toString());
 		IRDFStore store = rdf.createInMemoryStore();
 		if (uri.getHost() == null) return; // ignore
 		pWriter.println(
@@ -197,7 +268,7 @@ public class IcebearManager implements IBioclipseManager {
 			"<img border=0 src=\"" + ICON + "\" /></a></h2>");
 		pWriter.println("<ul>");
 		try {
-			rdf.importURL(store, uri.toString(), monitor);
+			rdf.importURL(store, uri.toString(), extraHeaders, monitor);
 			String uriString = uri.toString();
 			if (uriString.startsWith("http://rdf.freebase.com/ns/m/")) {
 				uri = new URI(uri.toString().replace("http://rdf.freebase.com/ns/m/", "http://rdf.freebase.com/ns/m."));
@@ -254,7 +325,7 @@ public class IcebearManager implements IBioclipseManager {
 			}
 			// get the PubChem identifier
 			if (uri.toString().startsWith("http://rdf.openmolecules.net/")) {
-				try {
+				/* try {
 					List<String> cids = rdf.getForPredicate(store, uri.toString(), "http://pubchem.ncbi.nlm.nih.gov/#cid");
 					for (String cid : cids) {
 						System.out.println("PubChem CID: " + cid);
@@ -267,6 +338,7 @@ public class IcebearManager implements IBioclipseManager {
 						}
 					}
 				} catch (BioclipseException exeption) {} // just ignore
+				*/
 			}
 			// get identifiers from DBPedia
 			if (uri.toString().startsWith("http://dbpedia.org/resource")) {
@@ -379,7 +451,7 @@ public class IcebearManager implements IBioclipseManager {
 			// only return types for which we have labels
 			if (types.size() > 0) {
 				for (String type : types) {
-					String label = getLabelForResource(type, null);
+					String label = getLabelForResource(store, type, null);
 					if (label != null && label.length() > 0) {
 						System.out.println("Going to output a label for: " + type);
 						approvedTypes.add(type);
@@ -392,7 +464,7 @@ public class IcebearManager implements IBioclipseManager {
 				pWriter.println("<b>Is a</b> ");
 				StringBuffer buffer = new StringBuffer();
 				for (String type : approvedTypes) {
-					String label = getLabelForResource(type, null);
+					String label = getLabelForResource(store, type, null);
 					buffer.append(label).append(" <a href=\"").append(type)
 						.append("\"><img src=\"").append(ICON ).append("\" /></a>, ");
 				}
@@ -520,7 +592,7 @@ public class IcebearManager implements IBioclipseManager {
 			}
 		}
 		// get CHEMINF properties
-		final String sparql =
+		String sparql =
 			"PREFIX resource:  <http://semanticscience.org/resource/>\n" +
 			"PREFIX pubchem: <http://pubchem.ncbi.nlm.nih.gov/rest/rdf/DESCRIPTION_>\n" +
 			"SELECT ?type ?value WHERE {" +
@@ -533,6 +605,22 @@ public class IcebearManager implements IBioclipseManager {
 			outputTable(pWriter, results, "type", "value");
 		} catch (Throwable exception) {
 			logger.debug("Error while finding CHEMINF properties: " + exception.getMessage(), exception);
+		}
+		// get CHEMINF properties II
+		sparql =
+			"PREFIX sio: <http://semanticscience.org/resource/>\n" +
+			"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n" +
+			"SELECT ?type ?value WHERE {" +
+			"  <" + ronURI.toString() + "> sio:has-attribute ?property ." +
+			"  ?property rdfs:label ?value ;" +
+			"    a ?desc . " +
+			"  ?desc rdfs:label ?type" +
+			"}";
+		try {
+			StringMatrix results = rdf.sparql(store, sparql);
+			outputTable(pWriter, results, "type", "value");
+		} catch (Throwable exception) {
+			logger.debug("Error while finding CHEMINF (PubChem style) properties: " + exception.getMessage(), exception);
 		}
 		// get Bio2RDF properties
 		if (ronURI.toString().startsWith("http://bio2rdf.org/")) {
@@ -596,48 +684,66 @@ public class IcebearManager implements IBioclipseManager {
 		}
 	}
 
-	private String getLabelForResource(String resource, IProgressMonitor monitor) {
+	private String getLabelForResource(IRDFStore currentStore, String resource, IProgressMonitor monitor) {
 		if (resourceMap.containsKey(resource)) return resourceMap.get(resource);
 		if (resource.startsWith("http://rdf.freebase.com/ns/")) return null; // ignore all of them which we did not accept specifically
 		if (resource.startsWith("http://sw.opencyc.org")) return null;
+		System.out.println("Needing a label for resource: " + resource);
 
+		// try the current store first
+		String label = getLabelFromStore(resource, currentStore);
+		if (label != null) return label;
+		
 		try {
 			URI uri = new URI(resource);
 			IRDFStore store = rdf.createInMemoryStore();
 			System.out.println("Getting a label online for resource: " + resource);
-			rdf.importURL(store, uri.toString(), monitor);
+			rdf.importURL(store, uri.toString(), extraHeaders, monitor);
 			System.out.println(rdf.asRDFN3(store)); // so that I can check what is there...
-			List<String> labels = new ArrayList<String>();
-			labels.addAll(rdf.getForPredicate(store, resource, DC.title.toString()));
-			labels.addAll(rdf.getForPredicate(store, resource, DC_10.title.toString()));
-			labels.addAll(rdf.getForPredicate(store, resource, DC_11.title.toString()));
-			labels.addAll(rdf.getForPredicate(store, resource, RDFS.label.toString()));
-			labels.addAll(rdf.getForPredicate(store, resource, "http://www.w3.org/2004/02/skos/core#prefLabel"));
-			labels.addAll(rdf.getForPredicate(store, resource, "http://www.w3.org/2004/02/skos/core#altLabel"));
-			
-			if (labels.size() == 0) {
-				resourceMap.put(resource, null); // don't try again
-				return null; // OK, did not find anything suitable
-			}
-			// the first will do fine, but pick the first English one
-			for (String label : labels) {
-				logger.debug("Is this english? -> " + label);
-				if (label.endsWith("@en")) {
-					label = label.substring(0, label.indexOf("@en")); // remove the lang indication
-					resourceMap.put(resource, label); // store it for later use
-					return label;
-				} else if (!label.contains("@")) {
-					resourceMap.put(resource, label); // store it for later use
-					return label;
-				}
-			}
-			logger.debug("Did not find an English label :(");
-			return labels.get(0); // no labels marked @en, so pick the first
-		} catch (Exception e) {
+			return getLabelFromStore(resource, store);
+		} catch (Throwable e) {
 			logger.debug("Something went wrong with getting a label: " + e.getMessage(), e);
 			resourceMap.put(resource, null); // I don't want to try again
 			return null;
 		}
+	}
+
+	private String getLabelFromStore(String resource, IRDFStore store) {
+		List<String> labels = new ArrayList<String>();
+		labels.addAll(getPredicate(store, resource, DC.title.toString()));
+		labels.addAll(getPredicate(store, resource, DC_10.title.toString()));
+		labels.addAll(getPredicate(store, resource, DC_11.title.toString()));
+		labels.addAll(getPredicate(store, resource, RDFS.label.toString()));
+		labels.addAll(getPredicate(store, resource, "http://www.w3.org/2004/02/skos/core#prefLabel"));
+		labels.addAll(getPredicate(store, resource, "http://www.w3.org/2004/02/skos/core#altLabel"));
+		
+		if (labels.size() == 0) {
+			resourceMap.put(resource, null); // don't try again
+			return null; // OK, did not find anything suitable
+		}
+		// the first will do fine, but pick the first English one
+		for (String label : labels) {
+			logger.debug("Is this english? -> " + label);
+			if (label.endsWith("@en")) {
+				label = label.substring(0, label.indexOf("@en")); // remove the lang indication
+				resourceMap.put(resource, label); // store it for later use
+				return label;
+			} else if (!label.contains("@")) {
+				resourceMap.put(resource, label); // store it for later use
+				return label;
+			}
+		}
+		logger.debug("Did not find an English label :(");
+		return labels.get(0); // no labels marked @en, so pick the first
+	}
+
+	private List<String> getPredicate(IRDFStore store, String resource, String predicate) {
+		try {
+			return rdf.getForPredicate(store, resource, predicate);
+		} catch (Throwable e) {
+			logger.debug("Error while getting value for " + predicate + ": " + e.getMessage(), e);
+		};
+		return Collections.emptyList();
 	}
 	
 	// only works for one property per predicate
@@ -663,7 +769,7 @@ public class IcebearManager implements IBioclipseManager {
 				StringBuffer buffer = new StringBuffer();
 				for (String objectURI : props) {
 					if (uriFilter == null || objectURI.contains(uriFilter)) {
-						String objectLabel = getLabelForResource(objectURI, null);
+						String objectLabel = getLabelForResource(store, objectURI, null);
 						if (objectLabel != null && objectLabel.length() > 0) {
 							System.out.println("Adding " + label + " -> " + props.get(0));
 							buffer.append(objectLabel).append(" <a href=\"")

@@ -28,6 +28,12 @@ public interface IIcebearManager extends IBioclipseManager {
     @PublishedMethod(
         params = "IMolecule mol, String filename",
         methodSummary = "Find information about this molecule and save it as a HTML file." )
-    public String findInfo( IMolecule mol, String filename) throws BioclipseException, CoreException;
+    public String findInfo(IMolecule mol, String filename) throws BioclipseException, CoreException;
+
+    @Recorded
+    @PublishedMethod(
+        params = "String uri, String filename",
+        methodSummary = "Find information about this molecule and save it as a HTML file." )
+    public String findInfo(String uri, String filename) throws BioclipseException, CoreException;
 
 }
