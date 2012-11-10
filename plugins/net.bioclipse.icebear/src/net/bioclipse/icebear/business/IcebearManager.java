@@ -388,7 +388,7 @@ public class IcebearManager implements IBioclipseManager {
 						System.out.println("CHEMBL: " + id);
 						// recurse
 						try {
-							URI sameURI = new URI("http://data.kasabi.com/dataset/chembl-rdf/chemblid/CHEMBL" + id);
+							URI sameURI = new URI("http://linkedchemistry.info/chembl/chemblid/CHEMBL" + id);
 							useUniveRsalIcebearPowers(pWriter, sameURI, alreadyDone, monitor);	
 						} catch (URISyntaxException exception) {
 							logger.debug("Error while getting the ChEMBL-RDF: " + exception.getMessage(), exception);
