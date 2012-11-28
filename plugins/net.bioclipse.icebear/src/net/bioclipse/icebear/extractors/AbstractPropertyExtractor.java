@@ -19,4 +19,13 @@ public class AbstractPropertyExtractor {
 		return Collections.emptyList();
 	}
 
+	protected List<String> allOwlSameAs(IRDFStore store, String resource) {
+		try {
+			return rdf.allOwlSameAs(store, resource);
+		} catch (Throwable exception) {
+			exception.printStackTrace();
+		}
+		return Collections.emptyList();
+	}
+	
 }

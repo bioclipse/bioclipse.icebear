@@ -1,0 +1,21 @@
+package net.bioclipse.icebear.extractors;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import net.bioclipse.rdf.business.IRDFStore;
+
+public class OwlSameAsExtractor extends AbstractPropertyExtractor implements INextURIExtractor {
+
+	@Override
+	public List<String> extractURIs(IRDFStore store, String resource) {
+		List<String> sameResources = allOwlSameAs(store, resource);
+		List<String> properResources = new ArrayList<String>();
+		for (String sameResource : sameResources) {
+			if (!sameResource.contains("dbpedia.org")) properResources.add(sameResource);
+		}
+		return properResources;
+	}
+
+
+}

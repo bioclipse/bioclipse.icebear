@@ -31,9 +31,11 @@ import net.bioclipse.core.business.BioclipseException;
 import net.bioclipse.core.domain.IMolecule;
 import net.bioclipse.core.domain.IMolecule.Property;
 import net.bioclipse.core.domain.StringMatrix;
+import net.bioclipse.icebear.extractors.INextURIExtractor;
 import net.bioclipse.icebear.extractors.IPropertyExtractor;
 import net.bioclipse.icebear.extractors.IdentifierExtractor;
 import net.bioclipse.icebear.extractors.LabelExtractor;
+import net.bioclipse.icebear.extractors.OwlSameAsExtractor;
 import net.bioclipse.jobs.IReturner;
 import net.bioclipse.managers.business.IBioclipseManager;
 import net.bioclipse.rdf.business.IRDFStore;
@@ -109,6 +111,10 @@ public class IcebearManager implements IBioclipseManager {
 		add(new LabelExtractor());
 		add(new IdentifierExtractor());
 	}};
+	private List<INextURIExtractor> spiders = new ArrayList<INextURIExtractor>() {
+		private static final long serialVersionUID = 7089854109617759948L; {
+		add(new OwlSameAsExtractor());
+	}};
 	
 	Map<String,String> extraHeaders = new HashMap<String, String>() {
 		private static final long serialVersionUID = 2825983879781792266L;
@@ -157,12 +163,16 @@ public class IcebearManager implements IBioclipseManager {
 		}
     	try {
 			rdf.addObjectProperty(store,
-				"http://www.bioclipse.org/PrimaryObject",
-				"http://www.bioclipse.org/hasURI",
+				"http://www.bioclipse.org/PrimaryObject", "http://www.bioclipse.org/hasURI",
 				nextURI.toString()
 			);
 		} catch (BioclipseException e) {
 			e.printStackTrace();
+		}
+		for (INextURIExtractor spider : spiders) {
+			for (String uri : spider.extractURIs(store, nextURI.toString())) {
+				workload.addNewURI(uri);
+			}
 		}
     	returner.partialReturn(store);
     }
