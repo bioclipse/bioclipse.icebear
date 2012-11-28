@@ -11,7 +11,6 @@
 package net.bioclipse.icebear.business;
 
 import java.util.List;
-import java.util.Map;
 
 import net.bioclipse.core.PublishedClass;
 import net.bioclipse.core.PublishedMethod;

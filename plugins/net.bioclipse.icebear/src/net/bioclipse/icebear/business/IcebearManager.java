@@ -31,6 +31,9 @@ import net.bioclipse.core.business.BioclipseException;
 import net.bioclipse.core.domain.IMolecule;
 import net.bioclipse.core.domain.IMolecule.Property;
 import net.bioclipse.core.domain.StringMatrix;
+import net.bioclipse.icebear.extractors.IPropertyExtractor;
+import net.bioclipse.icebear.extractors.IdentifierExtractor;
+import net.bioclipse.icebear.extractors.LabelExtractor;
 import net.bioclipse.jobs.IReturner;
 import net.bioclipse.managers.business.IBioclipseManager;
 import net.bioclipse.rdf.business.IRDFStore;
@@ -101,6 +104,12 @@ public class IcebearManager implements IBioclipseManager {
 		}
 	};
 
+	private List<IPropertyExtractor> extractors = new ArrayList<IPropertyExtractor>() {
+		private static final long serialVersionUID = 2825983879781792266L; {
+		add(new LabelExtractor());
+		add(new IdentifierExtractor());
+	}};
+	
 	Map<String,String> extraHeaders = new HashMap<String, String>() {
 		private static final long serialVersionUID = 2825983879781792266L;
 	{
@@ -131,40 +140,10 @@ public class IcebearManager implements IBioclipseManager {
     		"http://www.bioclipse.org/PrimaryObject",
 			"http://www.bioclipse.org/hasURI").get(0);
     	
-    	List<String> labels = new ArrayList<String>();
-		labels.addAll(getPredicate(store, resource, DC.title.toString()));
-		labels.addAll(getPredicate(store, resource, DC_10.title.toString()));
-		labels.addAll(getPredicate(store, resource, DC_11.title.toString()));
-		labels.addAll(getPredicate(store, resource, RDFS.label.toString()));
-		labels.addAll(getPredicate(store, resource, "http://www.w3.org/2004/02/skos/core#prefLabel"));
-		labels.addAll(getPredicate(store, resource, "http://www.w3.org/2004/02/skos/core#altLabel"));
-		
 		List<Entry> props = new ArrayList<Entry>();
-		// the first will do fine, but pick the first English one
-		for (String label : labels) {
-			logger.debug("Is this english? -> " + label);
-			if (label.endsWith("@en")) {
-				label = label.substring(0, label.indexOf("@en")); // remove the lang indication
-				props.add(new Entry("Label", label));
-			} else if (!label.contains("@")) {
-				props.add(new Entry("Label", label));
-			}
+		for (IPropertyExtractor extractor : extractors) {
+			props.addAll(extractor.extractProperties(store, resource));
 		}
-		
-		List<String> identifiers = new ArrayList<String>();
-		identifiers.addAll(rdf.getForPredicate(store, resource.toString(), DC.identifier.toString()));
-		identifiers.addAll(rdf.getForPredicate(store, resource.toString(), DC_10.identifier.toString()));
-		identifiers.addAll(rdf.getForPredicate(store, resource.toString(), DC_11.identifier.toString()));
-		for (String identifier : identifiers) {
-			if (identifier.endsWith("@en")) {
-				identifier = identifier.substring(0, identifier.indexOf("@en")); // remove the lang indication
-				props.add(new Entry("Identifier", identifier));
-			} else if (!identifier.contains("@")) {
-				props.add(new Entry("Identifier", identifier));
-			}
-		}
-
-		logger.debug("Did not find an English label :(");
 		return props;
     }
 
