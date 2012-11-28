@@ -19,8 +19,10 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import net.bioclipse.business.BioclipsePlatformManager;
 import net.bioclipse.cdk.business.CDKManager;
@@ -29,6 +31,7 @@ import net.bioclipse.core.business.BioclipseException;
 import net.bioclipse.core.domain.IMolecule;
 import net.bioclipse.core.domain.IMolecule.Property;
 import net.bioclipse.core.domain.StringMatrix;
+import net.bioclipse.jobs.IReturner;
 import net.bioclipse.managers.business.IBioclipseManager;
 import net.bioclipse.rdf.business.IRDFStore;
 import net.bioclipse.rdf.business.RDFManager;
@@ -108,6 +111,32 @@ public class IcebearManager implements IBioclipseManager {
         return "isbjørn";
     }
 
+    public void findInfo(IMolecule mol, IReturner<IRDFStore> returner, IProgressMonitor monitor)
+    throws BioclipseException {
+    	monitor.beginTask("Downloading RDF resources", 100);
+    	ICDKMolecule cdkMol = cdk.asCDKMolecule(mol);
+		String inchi = cdkMol.getInChI(Property.USE_CACHED_OR_CALCULATED);
+		IcebearWorkload workload = new IcebearWorkload();
+		workload.addNewURI("http://rdf.openmolecules.net/?" + inchi);
+		inchi = inchi.replace("=1S/", "=1/");
+		workload.addNewURI("http://rdf.openmolecules.net/?" + inchi);
+		while (workload.hasMoreWork() && !monitor.isCanceled()) {
+			findInfoForOneURI(workload, returner, monitor);
+	    	monitor.worked(1);
+		}
+    }
+
+    private void findInfoForOneURI(IcebearWorkload workload, IReturner<IRDFStore> returner, IProgressMonitor monitor) {
+    	IRDFStore store = rdf.createInMemoryStore();
+    	URI nextURI = workload.getNextURI();
+    	try {
+			rdf.importURL(store, nextURI.toString(), extraHeaders, monitor);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+    	returner.partialReturn(store);
+    }
+    
     public IFile findInfo( IMolecule mol, IFile target, IProgressMonitor monitor) throws BioclipseException, CoreException {
     	if (!bioclipse.isOnline())
     		throw new BioclipseException("Searching information on the web requires an active internet connection.");
@@ -816,6 +845,45 @@ public class IcebearManager implements IBioclipseManager {
 				pWriter.println("  </tr>");
 			}
 			pWriter.println("</table>");
+		}
+	}
+
+	class IcebearWorkload {
+		
+		Set<URI> todo = new HashSet<URI>();
+		Set<URI> done = new HashSet<URI>();
+
+		public boolean hasMoreWork() {
+			System.out.println("work left todo: " + todo.size());
+			return todo.size() != 0;
+		}
+
+		public URI getNextURI() {
+			URI nextURI = todo.iterator().next();
+			System.out.println("next URI: " + nextURI);
+			todo.remove(nextURI);
+			done.add(nextURI);
+			return nextURI;
+		}
+
+		/**
+		 * Returns false when the URI was already processed or is already scheduled.
+		 */
+		public boolean addNewURI(String newURI) {
+			System.out.println("Adding URI: " + newURI);
+			try {
+				URI uri = new URI(newURI);
+				if (done.contains(uri) || todo.contains(uri)) {
+					System.out.println("Already got it...");
+					return false;
+				}
+
+				todo.add(uri);
+				return true;
+			} catch (URISyntaxException e) {
+				System.out.println("Failed to add the new URI: " + e.getMessage());
+				return false;
+			}
 		}
 	}
 }
