@@ -55,6 +55,6 @@ public interface IIcebearManager extends IBioclipseManager {
     @PublishedMethod(
         params = "String uri, String filename",
         methodSummary = "Find information about this molecule and save it as a HTML file." )
-    public Map<String,String> getProperties(IRDFStore store) throws BioclipseException, CoreException;
+    public List<Entry> getProperties(IRDFStore store) throws BioclipseException, CoreException;
 
 }
