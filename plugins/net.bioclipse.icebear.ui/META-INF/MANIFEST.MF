@@ -1,0 +1,18 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Icebear UI
+Bundle-SymbolicName: net.bioclipse.icebear.ui;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: net.bioclipse.icebear.ui.Activator
+Bundle-Vendor: bioclipse.net
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ net.bioclipse.icebear,
+ net.bioclipse.core,
+ net.bioclipse.ui.business,
+ net.bioclipse.cdk.jchempaint,
+ net.bioclipse.cdk.business,
+ net.bioclipse.rdf;bundle-version="2.5.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-ActivationPolicy: lazy
+Import-Package: org.apache.log4j

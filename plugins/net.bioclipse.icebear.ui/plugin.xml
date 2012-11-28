@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.views">
+         <view
+               class="net.bioclipse.icebear.ui.views.IcebearView"
+               id="net.bioclipse.icebear.ui.views.IcebearView"
+               name="Icebear"
+               category="net.bioclipse.ui.category"
+               icon="icons/Ice16.png"
+               allowMultiple="false"
+               restorable="true">
+         </view>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.commands">
+         <command
+               id="net.bioclipse.icebear.ui.runicebear"
+               name="Run Icebear"
+               defaultHandler="net.bioclipse.icebear.ui.handlers.RunIcebearHandler">
+         </command>
+   </extension>
+   
+   <extension
+         point="org.eclipse.ui.menus">
+         <menuContribution
+               locationURI="popup:org.eclipse.ui.popup.any?after=additions">
+           <command
+                commandId="net.bioclipse.icebear.ui.runicebear"
+                icon="icons/Ice16.png"
+                label="Run Icebear"
+                tooltip="Run Icebear for spidering molecular information">
+              <visibleWhen
+                   checkEnabled="true">
+                <reference
+                      definitionId="net.bioclipse.cdk.jchempaint.editor.type">
+              </reference>
+             </visibleWhen>
+                
+           </command>
+         </menuContribution>
+   </extension>
+
+</plugin>
