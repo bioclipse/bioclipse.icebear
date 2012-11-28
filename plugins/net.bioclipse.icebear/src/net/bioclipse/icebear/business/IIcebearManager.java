@@ -11,6 +11,7 @@
 package net.bioclipse.icebear.business;
 
 import java.util.List;
+import java.util.Map;
 
 import net.bioclipse.core.PublishedClass;
 import net.bioclipse.core.PublishedMethod;
@@ -49,5 +50,11 @@ public interface IIcebearManager extends IBioclipseManager {
         params = "String uri, String filename",
         methodSummary = "Find information about this molecule and save it as a HTML file." )
     public String findInfo(String uri, String filename) throws BioclipseException, CoreException;
+
+    @Recorded
+    @PublishedMethod(
+        params = "String uri, String filename",
+        methodSummary = "Find information about this molecule and save it as a HTML file." )
+    public Map<String,String> getProperties(IRDFStore store) throws BioclipseException, CoreException;
 
 }
