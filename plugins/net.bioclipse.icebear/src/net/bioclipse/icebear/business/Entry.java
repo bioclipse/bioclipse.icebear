@@ -10,6 +10,8 @@ public class Entry {
 		this.object = object;
 	}
 
-	
+	public String toString() {
+		return "[" + predicate + ": " + object + "]";
+	}
 
 }
