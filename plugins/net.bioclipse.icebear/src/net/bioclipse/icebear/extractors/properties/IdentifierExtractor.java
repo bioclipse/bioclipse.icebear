@@ -17,7 +17,6 @@ import net.bioclipse.icebear.extractors.AbstractExtractor;
 import net.bioclipse.icebear.extractors.IPropertyExtractor;
 import net.bioclipse.rdf.business.IRDFStore;
 
-import com.hp.hpl.jena.vocabulary.DC;
 import com.hp.hpl.jena.vocabulary.DC_10;
 import com.hp.hpl.jena.vocabulary.DC_11;
 
@@ -28,7 +27,6 @@ public class IdentifierExtractor extends AbstractExtractor implements IPropertyE
 		List<Entry> props = new ArrayList<Entry>();
 
 		List<String> identifiers = new ArrayList<String>();
-		identifiers.addAll(getPredicate(store, resource.toString(), DC.identifier.toString()));
 		identifiers.addAll(getPredicate(store, resource.toString(), DC_10.identifier.toString()));
 		identifiers.addAll(getPredicate(store, resource.toString(), DC_11.identifier.toString()));
 		for (String identifier : identifiers) {
