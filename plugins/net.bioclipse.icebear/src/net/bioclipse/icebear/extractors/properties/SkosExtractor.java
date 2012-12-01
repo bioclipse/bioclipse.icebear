@@ -21,11 +21,12 @@ public class SkosExtractor extends AbstractExtractor implements IPropertyExtract
 
 	@Override
 	public List<Entry> extractProperties(IRDFStore store, String resource) {
+		List<Entry> props = new ArrayList<Entry>();
+
+		// labels
     	List<String> labels = new ArrayList<String>();
 		labels.addAll(getPredicate(store, resource, "http://www.w3.org/2004/02/skos/core#prefLabel"));
 		labels.addAll(getPredicate(store, resource, "http://www.w3.org/2004/02/skos/core#altLabel"));
-		
-		List<Entry> props = new ArrayList<Entry>();
 		// the first will do fine, but pick the first English one
 		for (String label : labels) {
 			if (label.endsWith("@en")) {
@@ -35,6 +36,19 @@ public class SkosExtractor extends AbstractExtractor implements IPropertyExtract
 				props.add(new Entry(resource, "Label", label));
 			}
 		}
+
+		// get a description
+		List<String> descriptions = new ArrayList<String>();
+		descriptions.addAll(getPredicate(store, resource, "http://www.w3.org/2004/02/skos/core#definition"));
+		for (String desc : descriptions) {
+			if (desc.endsWith("@en")) {
+				desc = desc.substring(0, desc.indexOf("@en")); // remove the lang indication
+				props.add(new Entry(resource, "Description", desc));
+			} else if (!desc.contains("@")) {
+				props.add(new Entry(resource, "Description", desc));
+			}
+		}
+
 		return props;
 	}
 }
