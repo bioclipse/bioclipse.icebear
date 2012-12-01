@@ -35,9 +35,13 @@ import net.bioclipse.icebear.extractors.IPropertyExtractor;
 import net.bioclipse.icebear.extractors.links.OwlEquivalentClassExtractor;
 import net.bioclipse.icebear.extractors.links.OwlSameAsExtractor;
 import net.bioclipse.icebear.extractors.links.SkosExactMatchExtractor;
-import net.bioclipse.icebear.extractors.properties.FoafExtractor;
+import net.bioclipse.icebear.extractors.properties.ChemAxiomExtractor;
+import net.bioclipse.icebear.extractors.properties.ChemInfExtractor;
 import net.bioclipse.icebear.extractors.properties.DublinCoreExtractor;
+import net.bioclipse.icebear.extractors.properties.FoafExtractor;
 import net.bioclipse.icebear.extractors.properties.RdfsExtractor;
+import net.bioclipse.icebear.extractors.properties.SioExtractor;
+import net.bioclipse.icebear.extractors.properties.SkosExtractor;
 import net.bioclipse.jobs.IReturner;
 import net.bioclipse.managers.business.IBioclipseManager;
 import net.bioclipse.rdf.business.IRDFStore;
@@ -113,6 +117,10 @@ public class IcebearManager implements IBioclipseManager {
 		add(new RdfsExtractor());
 		add(new DublinCoreExtractor());
 		add(new FoafExtractor());
+		add(new SkosExtractor());
+		add(new ChemInfExtractor());
+		add(new ChemAxiomExtractor());
+		add(new SioExtractor());
 	}};
 	private List<INextURIExtractor> spiders = new ArrayList<INextURIExtractor>() {
 		private static final long serialVersionUID = 7089854109617759948L; {

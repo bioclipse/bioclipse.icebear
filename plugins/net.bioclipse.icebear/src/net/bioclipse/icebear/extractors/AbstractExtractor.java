@@ -12,6 +12,7 @@ package net.bioclipse.icebear.extractors;
 import java.util.Collections;
 import java.util.List;
 
+import net.bioclipse.core.domain.StringMatrix;
 import net.bioclipse.rdf.business.IRDFStore;
 import net.bioclipse.rdf.business.RDFManager;
 
@@ -55,6 +56,15 @@ public class AbstractExtractor {
 			exception.printStackTrace();
 		}
 		return Collections.emptyList();
+	}
+
+	protected StringMatrix sparql(IRDFStore store, String query) {
+		try {
+			return rdf.sparql(store, query);
+		} catch (Throwable exception) {
+			exception.printStackTrace();
+		};
+		return new StringMatrix();
 	}
 
 }
