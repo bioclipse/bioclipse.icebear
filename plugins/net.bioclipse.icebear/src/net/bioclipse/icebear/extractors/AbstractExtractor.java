@@ -6,7 +6,7 @@ import java.util.List;
 import net.bioclipse.rdf.business.IRDFStore;
 import net.bioclipse.rdf.business.RDFManager;
 
-public class AbstractPropertyExtractor {
+public class AbstractExtractor {
 
 	private RDFManager rdf = new RDFManager();
 

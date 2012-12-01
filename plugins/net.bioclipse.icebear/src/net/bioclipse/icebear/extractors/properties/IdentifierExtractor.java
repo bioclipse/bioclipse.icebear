@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.bioclipse.icebear.business.Entry;
-import net.bioclipse.icebear.extractors.AbstractPropertyExtractor;
+import net.bioclipse.icebear.extractors.AbstractExtractor;
 import net.bioclipse.icebear.extractors.IPropertyExtractor;
 import net.bioclipse.rdf.business.IRDFStore;
 
@@ -12,7 +12,7 @@ import com.hp.hpl.jena.vocabulary.DC;
 import com.hp.hpl.jena.vocabulary.DC_10;
 import com.hp.hpl.jena.vocabulary.DC_11;
 
-public class IdentifierExtractor extends AbstractPropertyExtractor implements IPropertyExtractor {
+public class IdentifierExtractor extends AbstractExtractor implements IPropertyExtractor {
 
 	@Override
 	public List<Entry> extractProperties(IRDFStore store, String resource) {
