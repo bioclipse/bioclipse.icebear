@@ -17,24 +17,22 @@ import net.bioclipse.icebear.extractors.AbstractExtractor;
 import net.bioclipse.icebear.extractors.IPropertyExtractor;
 import net.bioclipse.rdf.business.IRDFStore;
 
-import com.hp.hpl.jena.vocabulary.DC_10;
-import com.hp.hpl.jena.vocabulary.DC_11;
-
-public class IdentifierExtractor extends AbstractExtractor implements IPropertyExtractor {
+public class SkosExtractor extends AbstractExtractor implements IPropertyExtractor {
 
 	@Override
 	public List<Entry> extractProperties(IRDFStore store, String resource) {
+    	List<String> labels = new ArrayList<String>();
+		labels.addAll(getPredicate(store, resource, "http://www.w3.org/2004/02/skos/core#prefLabel"));
+		labels.addAll(getPredicate(store, resource, "http://www.w3.org/2004/02/skos/core#altLabel"));
+		
 		List<Entry> props = new ArrayList<Entry>();
-
-		List<String> identifiers = new ArrayList<String>();
-		identifiers.addAll(getPredicate(store, resource.toString(), DC_10.identifier.toString()));
-		identifiers.addAll(getPredicate(store, resource.toString(), DC_11.identifier.toString()));
-		for (String identifier : identifiers) {
-			if (identifier.endsWith("@en")) {
-				identifier = identifier.substring(0, identifier.indexOf("@en")); // remove the lang indication
-				props.add(new Entry(resource, "Identifier", identifier));
-			} else if (!identifier.contains("@")) {
-				props.add(new Entry(resource, "Identifier", identifier));
+		// the first will do fine, but pick the first English one
+		for (String label : labels) {
+			if (label.endsWith("@en")) {
+				label = label.substring(0, label.indexOf("@en")); // remove the lang indication
+				props.add(new Entry(resource, "Label", label));
+			} else if (!label.contains("@")) {
+				props.add(new Entry(resource, "Label", label));
 			}
 		}
 		return props;
