@@ -32,13 +32,16 @@ import net.bioclipse.core.domain.IMolecule.Property;
 import net.bioclipse.core.domain.StringMatrix;
 import net.bioclipse.icebear.extractors.INextURIExtractor;
 import net.bioclipse.icebear.extractors.IPropertyExtractor;
+import net.bioclipse.icebear.extractors.links.OpenMoleculesMinter;
 import net.bioclipse.icebear.extractors.links.OwlEquivalentClassExtractor;
 import net.bioclipse.icebear.extractors.links.OwlSameAsExtractor;
 import net.bioclipse.icebear.extractors.links.SkosExactMatchExtractor;
 import net.bioclipse.icebear.extractors.properties.ChemAxiomExtractor;
 import net.bioclipse.icebear.extractors.properties.ChemInfExtractor;
+import net.bioclipse.icebear.extractors.properties.DBPediaExtractor;
 import net.bioclipse.icebear.extractors.properties.DublinCoreExtractor;
 import net.bioclipse.icebear.extractors.properties.FoafExtractor;
+import net.bioclipse.icebear.extractors.properties.OpenMoleculesExtractor;
 import net.bioclipse.icebear.extractors.properties.RdfsExtractor;
 import net.bioclipse.icebear.extractors.properties.SioExtractor;
 import net.bioclipse.icebear.extractors.properties.SkosExtractor;
@@ -121,12 +124,15 @@ public class IcebearManager implements IBioclipseManager {
 		add(new ChemInfExtractor());
 		add(new ChemAxiomExtractor());
 		add(new SioExtractor());
+		add(new OpenMoleculesExtractor());
+		add(new DBPediaExtractor());
 	}};
 	private List<INextURIExtractor> spiders = new ArrayList<INextURIExtractor>() {
 		private static final long serialVersionUID = 7089854109617759948L; {
 		add(new OwlSameAsExtractor());
 		add(new OwlEquivalentClassExtractor());
 		add(new SkosExactMatchExtractor());
+//		add(new OpenMoleculesMinter());
 	}};
 	
 	Map<String,String> extraHeaders = new HashMap<String, String>() {

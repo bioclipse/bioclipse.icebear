@@ -11,6 +11,7 @@ package net.bioclipse.icebear.extractors;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import net.bioclipse.core.domain.StringMatrix;
 import net.bioclipse.rdf.business.IRDFStore;
@@ -67,4 +68,10 @@ public class AbstractExtractor {
 		return new StringMatrix();
 	}
 
+	protected void addPredicateToMap(IRDFStore store, Map<String, String> resultMap, String label, String resource, String predicate) {
+		List<String> props = getPredicate(store, resource, predicate);
+		if (props.size() > 0) {
+			resultMap.put(label, props.get(0));
+		}
+	}
 }

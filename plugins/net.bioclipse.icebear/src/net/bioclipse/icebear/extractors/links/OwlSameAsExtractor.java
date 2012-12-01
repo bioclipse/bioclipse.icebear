@@ -23,7 +23,15 @@ public class OwlSameAsExtractor extends AbstractExtractor implements INextURIExt
 		List<String> sameResources = allOwlSameAs(store, resource);
 		List<String> properResources = new ArrayList<String>();
 		for (String sameResource : sameResources) {
-			if (!sameResource.contains(".dbpedia.org")) properResources.add(sameResource);
+			// dirty hack #1: if on DBPedia, ignore translations
+			if (resource.startsWith("http://dbpedia.org/") &&
+				sameResource.contains(".dbpedia.org")) continue;
+			// dirty hack #2: if on FreeBase, ignore any DBPedia
+			if (resource.startsWith("http://rdf.freebase.com/") &&
+				sameResource.contains("dbpedia.org")) continue;
+
+			// else: OK, check it out
+			properResources.add(sameResource);
 		}
 		return properResources;
 	}
