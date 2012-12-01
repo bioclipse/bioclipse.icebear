@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.bioclipse.icebear.business.Entry;
+import net.bioclipse.icebear.business.Fields;
 import net.bioclipse.icebear.extractors.AbstractExtractor;
 import net.bioclipse.icebear.extractors.IPropertyExtractor;
 import net.bioclipse.rdf.business.IRDFStore;
@@ -34,9 +35,9 @@ public class DublinCoreExtractor extends AbstractExtractor implements IPropertyE
 		for (String label : labels) {
 			if (label.endsWith("@en")) {
 				label = label.substring(0, label.indexOf("@en")); // remove the lang indication
-				props.add(new Entry(resource, "Label", label));
+				props.add(new Entry(resource, Fields.LABEL, label));
 			} else if (!label.contains("@")) {
-				props.add(new Entry(resource, "Label", label));
+				props.add(new Entry(resource, Fields.LABEL, label));
 			}
 		}
 
@@ -47,9 +48,9 @@ public class DublinCoreExtractor extends AbstractExtractor implements IPropertyE
 		for (String identifier : identifiers) {
 			if (identifier.endsWith("@en")) {
 				identifier = identifier.substring(0, identifier.indexOf("@en")); // remove the lang indication
-				props.add(new Entry(resource, "Identifier", identifier));
+				props.add(new Entry(resource, Fields.IDENTIFIER, identifier));
 			} else if (!identifier.contains("@")) {
-				props.add(new Entry(resource, "Identifier", identifier));
+				props.add(new Entry(resource, Fields.IDENTIFIER, identifier));
 			}
 		}
 
@@ -58,7 +59,7 @@ public class DublinCoreExtractor extends AbstractExtractor implements IPropertyE
 		descriptions.addAll(getPredicate(store, resource, DC_10.description.toString()));
 		descriptions.addAll(getPredicate(store, resource, DC_11.description.toString()));
 		for (String desc : descriptions) {
-			props.add(new Entry(resource, "Description", desc));
+			props.add(new Entry(resource, Fields.DESCRIPTION, desc));
 		}
 		return props;
 	}

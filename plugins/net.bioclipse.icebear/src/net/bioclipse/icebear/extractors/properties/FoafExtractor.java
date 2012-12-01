@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.bioclipse.icebear.business.Entry;
+import net.bioclipse.icebear.business.Fields;
 import net.bioclipse.icebear.extractors.AbstractExtractor;
 import net.bioclipse.icebear.extractors.IPropertyExtractor;
 import net.bioclipse.rdf.business.IRDFStore;
@@ -26,11 +27,11 @@ public class FoafExtractor extends AbstractExtractor implements IPropertyExtract
 		List<Entry> props = new ArrayList<Entry>();
 		List<String> homepages = getPredicate(store, resource, FOAF.homepage.toString());
 		for (String homepage : homepages) {
-			props.add(new Entry(resource, "Homepage", homepage));
+			props.add(new Entry(resource, Fields.HOMEPAGE, homepage));
 		}
 		List<String> pages = getPredicate(store, resource, FOAF.page.toString());
 		for (String page : pages) {
-			props.add(new Entry(resource, "Homepage", page));
+			props.add(new Entry(resource, Fields.HOMEPAGE, page));
 		}
 		return props;
 	}

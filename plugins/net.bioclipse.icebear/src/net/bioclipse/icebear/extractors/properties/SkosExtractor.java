@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.bioclipse.icebear.business.Entry;
+import net.bioclipse.icebear.business.Fields;
 import net.bioclipse.icebear.extractors.AbstractExtractor;
 import net.bioclipse.icebear.extractors.IPropertyExtractor;
 import net.bioclipse.rdf.business.IRDFStore;
@@ -31,9 +32,9 @@ public class SkosExtractor extends AbstractExtractor implements IPropertyExtract
 		for (String label : labels) {
 			if (label.endsWith("@en")) {
 				label = label.substring(0, label.indexOf("@en")); // remove the lang indication
-				props.add(new Entry(resource, "Label", label));
+				props.add(new Entry(resource, Fields.LABEL, label));
 			} else if (!label.contains("@")) {
-				props.add(new Entry(resource, "Label", label));
+				props.add(new Entry(resource, Fields.LABEL, label));
 			}
 		}
 
@@ -43,9 +44,9 @@ public class SkosExtractor extends AbstractExtractor implements IPropertyExtract
 		for (String desc : descriptions) {
 			if (desc.endsWith("@en")) {
 				desc = desc.substring(0, desc.indexOf("@en")); // remove the lang indication
-				props.add(new Entry(resource, "Description", desc));
+				props.add(new Entry(resource, Fields.DESCRIPTION, desc));
 			} else if (!desc.contains("@")) {
-				props.add(new Entry(resource, "Description", desc));
+				props.add(new Entry(resource, Fields.DESCRIPTION, desc));
 			}
 		}
 
