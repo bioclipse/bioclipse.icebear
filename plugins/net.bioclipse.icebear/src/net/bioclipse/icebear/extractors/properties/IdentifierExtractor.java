@@ -1,9 +1,11 @@
-package net.bioclipse.icebear.extractors;
+package net.bioclipse.icebear.extractors.properties;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import net.bioclipse.icebear.business.Entry;
+import net.bioclipse.icebear.extractors.AbstractPropertyExtractor;
+import net.bioclipse.icebear.extractors.IPropertyExtractor;
 import net.bioclipse.rdf.business.IRDFStore;
 
 import com.hp.hpl.jena.vocabulary.DC;

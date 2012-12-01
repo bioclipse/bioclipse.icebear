@@ -1,8 +1,10 @@
-package net.bioclipse.icebear.extractors;
+package net.bioclipse.icebear.extractors.links;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import net.bioclipse.icebear.extractors.AbstractPropertyExtractor;
+import net.bioclipse.icebear.extractors.INextURIExtractor;
 import net.bioclipse.rdf.business.IRDFStore;
 
 public class OwlSameAsExtractor extends AbstractPropertyExtractor implements INextURIExtractor {
