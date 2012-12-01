@@ -35,6 +35,7 @@ import net.bioclipse.icebear.extractors.IPropertyExtractor;
 import net.bioclipse.icebear.extractors.links.OwlEquivalentClassExtractor;
 import net.bioclipse.icebear.extractors.links.OwlSameAsExtractor;
 import net.bioclipse.icebear.extractors.links.SkosExactMatchExtractor;
+import net.bioclipse.icebear.extractors.properties.FoafExtractor;
 import net.bioclipse.icebear.extractors.properties.IdentifierExtractor;
 import net.bioclipse.icebear.extractors.properties.LabelExtractor;
 import net.bioclipse.jobs.IReturner;
@@ -111,6 +112,7 @@ public class IcebearManager implements IBioclipseManager {
 		private static final long serialVersionUID = 2825983879781792266L; {
 		add(new LabelExtractor());
 		add(new IdentifierExtractor());
+		add(new FoafExtractor());
 	}};
 	private List<INextURIExtractor> spiders = new ArrayList<INextURIExtractor>() {
 		private static final long serialVersionUID = 7089854109617759948L; {
