@@ -17,7 +17,7 @@ import net.bioclipse.rdf.business.RDFManager;
 
 public class AbstractExtractor {
 
-	private RDFManager rdf = new RDFManager();
+	protected RDFManager rdf = new RDFManager();
 
 	protected List<String> getPredicate(IRDFStore store, String resource, String predicate) {
 		try {
@@ -36,5 +36,25 @@ public class AbstractExtractor {
 		}
 		return Collections.emptyList();
 	}
-	
+
+	protected List<String> allOwlEquivalentClass(IRDFStore store, String resource) {
+		try {
+			return rdf.allOwlEquivalentClass(store, resource);
+		} catch (Throwable exception) {
+			exception.printStackTrace();
+		}
+		return Collections.emptyList();
+	}
+
+	protected List<String> allSkosExactmatch(IRDFStore store, String resource) {
+		try {
+			return rdf.getForPredicate(
+				store, resource, "http://www.w3.org/2004/02/skos/core#exactMatch"
+			);
+		} catch (Throwable exception) {
+			exception.printStackTrace();
+		}
+		return Collections.emptyList();
+	}
+
 }

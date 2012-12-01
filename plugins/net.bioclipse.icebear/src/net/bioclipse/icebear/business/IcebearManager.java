@@ -32,7 +32,9 @@ import net.bioclipse.core.domain.IMolecule.Property;
 import net.bioclipse.core.domain.StringMatrix;
 import net.bioclipse.icebear.extractors.INextURIExtractor;
 import net.bioclipse.icebear.extractors.IPropertyExtractor;
+import net.bioclipse.icebear.extractors.links.OwlEquivalentClassExtractor;
 import net.bioclipse.icebear.extractors.links.OwlSameAsExtractor;
+import net.bioclipse.icebear.extractors.links.SkosExactMatchExtractor;
 import net.bioclipse.icebear.extractors.properties.IdentifierExtractor;
 import net.bioclipse.icebear.extractors.properties.LabelExtractor;
 import net.bioclipse.jobs.IReturner;
@@ -113,6 +115,8 @@ public class IcebearManager implements IBioclipseManager {
 	private List<INextURIExtractor> spiders = new ArrayList<INextURIExtractor>() {
 		private static final long serialVersionUID = 7089854109617759948L; {
 		add(new OwlSameAsExtractor());
+		add(new OwlEquivalentClassExtractor());
+		add(new SkosExactMatchExtractor());
 	}};
 	
 	Map<String,String> extraHeaders = new HashMap<String, String>() {
