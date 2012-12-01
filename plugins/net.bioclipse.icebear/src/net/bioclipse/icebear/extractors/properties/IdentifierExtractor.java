@@ -34,9 +34,9 @@ public class IdentifierExtractor extends AbstractExtractor implements IPropertyE
 		for (String identifier : identifiers) {
 			if (identifier.endsWith("@en")) {
 				identifier = identifier.substring(0, identifier.indexOf("@en")); // remove the lang indication
-				props.add(new Entry("Identifier", identifier));
+				props.add(new Entry(resource, "Identifier", identifier));
 			} else if (!identifier.contains("@")) {
-				props.add(new Entry("Identifier", identifier));
+				props.add(new Entry(resource, "Identifier", identifier));
 			}
 		}
 		return props;

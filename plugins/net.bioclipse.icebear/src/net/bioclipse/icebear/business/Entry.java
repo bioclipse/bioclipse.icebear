@@ -1,4 +1,5 @@
 /* Copyright (c) 2012  Ola Spjuth <ola.spjuth@farmbio.uu.se>
+ *               2012  Egon Willighagen <egon.willighagen@gmail.com>
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -8,13 +9,23 @@
  * Contact: http://www.bioclipse.net/
  */
 package net.bioclipse.icebear.business;
+
+/**
+ * Class to hold the molecular properties.
+ */
 public class Entry {
+
+	// the next two fields are for provenance
+
+	/** A URI for the resource for which this property applies. */
+	public String resource;
 
 	public String predicate;
 	public String object;
 	
-	public Entry(String predicate, String object) {
+	public Entry(String resource, String predicate, String object) {
 		super();
+		this.resource = resource;
 		this.predicate = predicate;
 		this.object = object;
 	}

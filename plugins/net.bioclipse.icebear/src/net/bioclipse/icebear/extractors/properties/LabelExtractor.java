@@ -39,9 +39,9 @@ public class LabelExtractor extends AbstractExtractor implements IPropertyExtrac
 		for (String label : labels) {
 			if (label.endsWith("@en")) {
 				label = label.substring(0, label.indexOf("@en")); // remove the lang indication
-				props.add(new Entry("Label", label));
+				props.add(new Entry(resource, "Label", label));
 			} else if (!label.contains("@")) {
-				props.add(new Entry("Label", label));
+				props.add(new Entry(resource, "Label", label));
 			}
 		}
 		return props;
