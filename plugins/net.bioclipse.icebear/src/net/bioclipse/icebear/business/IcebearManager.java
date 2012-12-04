@@ -179,11 +179,11 @@ public class IcebearManager implements IBioclipseManager {
 		String nextURIString = nextURI.toString();
 		monitor.subTask("Downloading " + nextURIString);
     	try {
-			rdf.importURL(store, nextURIString, extraHeaders, monitor);
 			rdf.addObjectProperty(store,
 				"http://www.bioclipse.org/PrimaryObject", "http://www.bioclipse.org/hasURI",
 				nextURI.toString()
 			);
+			rdf.importURL(store, nextURIString, extraHeaders, monitor);
 			for (INextURIExtractor spider : spiders) {
 				for (String uri : spider.extractURIs(store, nextURI.toString())) {
 					workload.addNewURI(uri);
