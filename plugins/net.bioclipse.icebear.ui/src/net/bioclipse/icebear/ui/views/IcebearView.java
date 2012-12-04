@@ -23,7 +23,9 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.viewers.CellLabelProvider;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
+import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
@@ -31,7 +33,9 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.window.ToolTip;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -82,6 +86,7 @@ public class IcebearView extends ViewPart{
 		viewer = new TableViewer(parent, SWT.BORDER | SWT.FULL_SELECTION);
 		GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, true);
 		viewer.getTable().setLayoutData(gridData);
+		ColumnViewerToolTipSupport.enableFor(viewer,ToolTip.NO_RECREATE);
 
 		viewer.setContentProvider(new IceBearContentProvider());
 
@@ -107,17 +112,25 @@ public class IcebearView extends ViewPart{
 
 		};
 
-		column = new TableViewerColumn(viewer, SWT.NONE);
-		column.getColumn().setWidth(200);
-		column.getColumn().setText("Object");
-		column.getColumn().setMoveable(true);
-		column.setLabelProvider(new ColumnLabelProvider() {
+		CellLabelProvider labelProvider = new ColumnLabelProvider() {
+			public Point getToolTipShift(Object object) { return new Point(5, 5); }
+			public int getToolTipDisplayDelayTime(Object object) { return 200; }
+			public int getToolTipTimeDisplayed(Object object) { return 5000; }
+			
+			public String getToolTipText(Object element) {
+				return ((Entry) element).resource;
+			}
 
 			public String getText(Object element) {
 				return ((Entry) element).object;
 			}
+		};
 
-		});
+		column = new TableViewerColumn(viewer, SWT.NONE);
+		column.getColumn().setWidth(200);
+		column.getColumn().setText("Object");
+		column.getColumn().setMoveable(true);
+		column.setLabelProvider(labelProvider);
 
 		new ColumnViewerSorter(viewer,column) {
 
