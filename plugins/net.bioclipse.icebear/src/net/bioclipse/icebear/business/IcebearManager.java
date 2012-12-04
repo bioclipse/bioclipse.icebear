@@ -142,6 +142,7 @@ public class IcebearManager implements IBioclipseManager {
 		private static final long serialVersionUID = 2825983879781792266L;
 	{
 	  put("Content-Type", "application/rdf+xml");
+	  put("Accept", "application/rdf+xml"); // Both Accept and Content-Type are needed for PubChem 
 	}};
 
     public String getManagerName() {
