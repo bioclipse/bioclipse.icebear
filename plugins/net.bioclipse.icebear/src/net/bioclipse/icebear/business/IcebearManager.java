@@ -32,6 +32,7 @@ import net.bioclipse.core.domain.IMolecule.Property;
 import net.bioclipse.core.domain.StringMatrix;
 import net.bioclipse.icebear.extractors.INextURIExtractor;
 import net.bioclipse.icebear.extractors.IPropertyExtractor;
+import net.bioclipse.icebear.extractors.links.DBPediaMinter;
 import net.bioclipse.icebear.extractors.links.OwlEquivalentClassExtractor;
 import net.bioclipse.icebear.extractors.links.OwlSameAsExtractor;
 import net.bioclipse.icebear.extractors.links.SkosExactMatchExtractor;
@@ -133,6 +134,7 @@ public class IcebearManager implements IBioclipseManager {
 		add(new OwlSameAsExtractor());
 		add(new OwlEquivalentClassExtractor());
 		add(new SkosExactMatchExtractor());
+		add(new DBPediaMinter());
 //		add(new OpenMoleculesMinter());
 	}};
 	

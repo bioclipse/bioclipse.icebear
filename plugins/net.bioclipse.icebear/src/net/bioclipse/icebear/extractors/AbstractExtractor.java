@@ -74,4 +74,10 @@ public class AbstractExtractor {
 			resultMap.put(label, props.get(0));
 		}
 	}
+
+	protected String stripDataType(String id) {
+		if (id.contains("^^"))
+			return id.substring(0, id.indexOf("^^"));
+		return id;
+	}
 }
