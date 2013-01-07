@@ -10,10 +10,14 @@
  */
 package net.bioclipse.icebear.business;
 
+import org.eclipse.ui.views.properties.IPropertyDescriptor;
+import org.eclipse.ui.views.properties.IPropertySource2;
+import org.eclipse.ui.views.properties.TextPropertyDescriptor;
+
 /**
  * Class to hold the molecular properties.
  */
-public class Entry {
+public class Entry implements IPropertySource2 {
 
 	// the next two fields are for provenance
 
@@ -32,6 +36,56 @@ public class Entry {
 
 	public String toString() {
 		return "[" + predicate + ": " + object + "]";
+	}
+
+	@Override
+	public Object getEditableValue() {
+		return this;
+	}
+
+	private static final String SOURCE_ID = "isbjorn.source.id";
+	private static final TextPropertyDescriptor SOURCE_PROPERTY_DESCRIPTOR =
+	     new TextPropertyDescriptor(SOURCE_ID, "Source URI");
+	static {
+		SOURCE_PROPERTY_DESCRIPTOR.setCategory("Linked Data");
+		SOURCE_PROPERTY_DESCRIPTOR.setAlwaysIncompatible(true);
+	}
+
+	private static final IPropertyDescriptor[] DESCRIPTORS = {
+		SOURCE_PROPERTY_DESCRIPTOR
+	};
+
+	@Override
+	public IPropertyDescriptor[] getPropertyDescriptors() {
+		return DESCRIPTORS;
+	}
+
+	@Override
+	public Object getPropertyValue(Object id) {
+		if (SOURCE_ID.equals(id)) {
+			return resource;
+		}
+		return null;
+	}
+
+	@Override
+	public void resetPropertyValue(Object id) {
+		// nothing to do
+	}
+
+	@Override
+	public void setPropertyValue(Object id, Object value) {
+		// nothing to do
+	}
+
+	@Override
+	public boolean isPropertyResettable(Object id) {
+		return false;
+	}
+
+	@Override
+	public boolean isPropertySet(Object id) {
+		return true; // always true, because there is no reasonable default
 	}
 
 }
