@@ -187,6 +187,7 @@ public class IcebearManager implements IBioclipseManager {
 				nextURI.toString()
 			);
 			rdf.importURL(store, nextURIString, extraHeaders, monitor);
+			System.out.println(rdf.asTurtle(store));
 			for (INextURIExtractor spider : spiders) {
 				for (String uri : spider.extractURIs(store, nextURI.toString())) {
 					workload.addNewURI(uri);

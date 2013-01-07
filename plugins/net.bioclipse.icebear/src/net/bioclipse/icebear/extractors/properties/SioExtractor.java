@@ -20,23 +20,36 @@ import net.bioclipse.rdf.business.IRDFStore;
 
 public class SioExtractor extends AbstractExtractor implements IPropertyExtractor {
 
+	private final static String[] SIO_PREDICATES = {
+		"http://semanticscience.org/resource/has-attribute",
+		"http://semanticscience.org/resource/SIO_000008"
+	};
+
 	@Override
 	public List<Entry> extractProperties(IRDFStore store, String resource) {
 		List<Entry> props = new ArrayList<Entry>();
 
-		// get SIO properties
-		String sparql =
-			"PREFIX sio: <http://semanticscience.org/resource/>\n" +
-			"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n" +
-			"SELECT ?type ?value WHERE {" +
-			"  <" + resource + "> sio:has-attribute ?property ." +
-			"  ?property rdfs:label ?value ;" +
-			"    a ?desc . " +
-			"  ?desc rdfs:label ?type" +
-			"}";
-		StringMatrix results = sparql(store, sparql);
-		for (int i=1; i<=results.getRowCount(); i++) {
-			props.add(new Entry(resource, results.get(i, "type"), results.get(i, "value")));			
+		for (String predicate : SIO_PREDICATES) {
+			// get SIO properties
+			String sparql =
+				"PREFIX sio: <http://semanticscience.org/resource/>\n" +
+				"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n" +
+				"SELECT ?label ?desc ?value WHERE {" +
+				"  <" + resource + "> <" + predicate + "> ?property ." +
+				"  ?property sio:SIO_000300 ?value ." +
+				"  OPTIONAL { ?property a ?desc . } " +
+				"  OPTIONAL { ?property rdfs:label ?label . }" +
+				"}";
+			StringMatrix results = sparql(store, sparql);
+			for (int i=1; i<=results.getRowCount(); i++) {
+				String type = "NA";
+				if (results.get(i, "label") != null) {
+					type = results.get(i, "label");
+				} else if (results.get(i, "desc") != null) {
+					type = results.get(i, "desc");
+				}
+				props.add(new Entry(resource, type, results.get(i, "value")));			
+			}
 		}
 		return props;
 	}
