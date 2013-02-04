@@ -35,8 +35,14 @@ public class ChemAxiomExtractor extends AbstractExtractor implements IPropertyEx
 			"}";
 		StringMatrix results = sparql(store, sparql);
 		for (int i=1; i<=results.getRowCount(); i++) {
-			props.add(new Entry(resource, results.get(i, "type"), results.get(i, "value")));			
+			props.add(new Entry(resource, getLabel(results.get(i, "type")), results.get(i, "value")));			
 		}
 		return props;
 	}
+
+	private String getLabel(String type) {
+		if (type.startsWith("chemdomain:")) return type.substring(11);
+		return type;
+	}
+	
 }
