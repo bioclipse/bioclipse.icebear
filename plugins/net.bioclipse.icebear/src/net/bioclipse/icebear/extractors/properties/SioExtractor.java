@@ -20,35 +20,41 @@ import net.bioclipse.rdf.business.IRDFStore;
 
 public class SioExtractor extends AbstractExtractor implements IPropertyExtractor {
 
-	private final static String[] SIO_PREDICATES = {
+	private final static String[] SIO_HAS_ATTRIBUTE = {
 		"http://semanticscience.org/resource/has-attribute",
 		"http://semanticscience.org/resource/SIO_000008"
+	};
+	private final static String[] SIO_HAS_VALUE = {
+		"http://semanticscience.org/resource/has-value",
+		"http://semanticscience.org/resource/SIO_000300"
 	};
 
 	@Override
 	public List<Entry> extractProperties(IRDFStore store, String resource) {
 		List<Entry> props = new ArrayList<Entry>();
 
-		for (String predicate : SIO_PREDICATES) {
-			// get SIO properties
-			String sparql =
-				"PREFIX sio: <http://semanticscience.org/resource/>\n" +
-				"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n" +
-				"SELECT ?label ?desc ?value WHERE {" +
-				"  <" + resource + "> <" + predicate + "> ?property ." +
-				"  ?property sio:SIO_000300 ?value ." +
-				"  OPTIONAL { ?property a ?desc . } " +
-				"  OPTIONAL { ?property rdfs:label ?label . }" +
-				"}";
-			StringMatrix results = sparql(store, sparql);
-			for (int i=1; i<=results.getRowCount(); i++) {
-				String type = "NA";
-				if (results.get(i, "label") != null) {
-					type = results.get(i, "label");
-				} else if (results.get(i, "desc") != null) {
-					type = results.get(i, "desc");
+		for (String hasAttribute : SIO_HAS_ATTRIBUTE) {
+			for (String hasValue : SIO_HAS_VALUE) {
+				// get SIO properties
+				String sparql =
+					"PREFIX sio: <http://semanticscience.org/resource/>\n" +
+					"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n" +
+					"SELECT ?label ?desc ?value WHERE {" +
+					"  <" + resource + "> <" + hasAttribute + "> ?property ." +
+					"  ?property <" + hasValue + "> ?value ." +
+					"  OPTIONAL { ?property a ?desc . } " +
+					"  OPTIONAL { ?property rdfs:label ?label . }" +
+					"}";
+				StringMatrix results = sparql(store, sparql);
+				for (int i=1; i<=results.getRowCount(); i++) {
+					String type = "NA";
+					if (results.get(i, "label") != null) {
+						type = results.get(i, "label");
+					} else if (results.get(i, "desc") != null) {
+						type = results.get(i, "desc");
+					}
+					props.add(new Entry(resource, type, results.get(i, "value")));			
 				}
-				props.add(new Entry(resource, type, results.get(i, "value")));			
 			}
 		}
 		return props;
