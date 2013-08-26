@@ -666,33 +666,43 @@ public class IcebearManager implements IBioclipseManager {
 			}
 		}
 		// get CHEMINF properties
-		String sparql =
-			"PREFIX resource:  <http://semanticscience.org/resource/>\n" +
-			"PREFIX pubchem: <http://pubchem.ncbi.nlm.nih.gov/rest/rdf/DESCRIPTION_>\n" +
-			"SELECT ?type ?value WHERE {" +
-			"  <" + ronURI.toString() + "> resource:CHEMINF_000200 ?desc ." +
-			"  ?desc resource:SIO_000300 ?value ;" +
-			"    a ?type . " +
-			"}";
+		String[] SIO_HAS_ATTRIBUTE = {
+			"http://semanticscience.org/resource/CHEMINF_000200",
+			"http://semanticscience.org/resource/has-attribute",
+			"http://semanticscience.org/resource/SIO_000008"
+		};
+		String[] SIO_HAS_VALUE = {
+			"http://semanticscience.org/resource/has-value",
+			"http://semanticscience.org/resource/SIO_000300"
+		};
+
 		try {
-			StringMatrix results = rdf.sparql(store, sparql);
-			outputTable(pWriter, results, "type", "value");
-		} catch (Throwable exception) {
-			logger.debug("Error while finding CHEMINF properties: " + exception.getMessage(), exception);
-		}
-		// get CHEMINF properties II
-		sparql =
-			"PREFIX sio: <http://semanticscience.org/resource/>\n" +
-			"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n" +
-			"SELECT ?type ?value WHERE {" +
-			"  <" + ronURI.toString() + "> sio:has-attribute ?property ." +
-			"  ?property rdfs:label ?value ;" +
-			"    a ?desc . " +
-			"  ?desc rdfs:label ?type" +
-			"}";
-		try {
-			StringMatrix results = rdf.sparql(store, sparql);
-			outputTable(pWriter, results, "type", "value");
+			Map<String,String> props = new HashMap<String, String>(); 
+			for (String hasAttribute : SIO_HAS_ATTRIBUTE) {
+				for (String hasValue : SIO_HAS_VALUE) {
+					// get SIO properties
+					String sparql =
+						"PREFIX sio: <http://semanticscience.org/resource/>\n" +
+						"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n" +
+						"SELECT ?label ?desc ?value WHERE {" +
+						"  <" + ronURI.toString() + "> <" + hasAttribute + "> ?property ." +
+						"  ?property <" + hasValue + "> ?value ." +
+						"  OPTIONAL { ?property a ?desc . } " +
+						"  OPTIONAL { ?property rdfs:label ?label . }" +
+						"}";
+					StringMatrix results = rdf.sparql(store, sparql);
+					for (int i=1; i<=results.getRowCount(); i++) {
+						String type = "NA";
+						if (results.get(i, "label") != null) {
+							type = results.get(i, "label");
+						} else if (results.get(i, "desc") != null) {
+							type = results.get(i, "desc");
+						}
+						props.put(type, results.get(i, "value"));			
+					}
+				}
+			}
+			outputTable(pWriter, props);
 		} catch (Throwable exception) {
 			logger.debug("Error while finding CHEMINF (PubChem style) properties: " + exception.getMessage(), exception);
 		}
