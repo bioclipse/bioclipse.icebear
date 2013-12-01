@@ -42,7 +42,7 @@ public class DBPediaMinter extends AbstractExtractor implements INextURIExtracto
 				List<String> ids = rdf.getForPredicate(store, uri.toString(), "http://dbpedia.org/ontology/pubchem");
 				for (String id : ids) {
 					System.out.println("PubChem: " + id);
-					extractedURIs.add("http://pubchem.ncbi.nlm.nih.gov/rest/rdf/PUBCHEM_CID" + id);
+					extractedURIs.add("http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID" + id);
 				}
 			} catch (BioclipseException exeption) {} // just ignore
 			try {
