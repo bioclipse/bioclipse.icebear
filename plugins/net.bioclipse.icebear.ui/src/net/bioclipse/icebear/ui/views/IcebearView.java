@@ -107,7 +107,7 @@ public class IcebearView extends ViewPart{
 			protected int doCompare(Viewer viewer, Object e1, Object e2) {
 				Entry p1 = (Entry) e1;
 				Entry p2 = (Entry) e2;
-				return p1.predicate.compareToIgnoreCase(p2.predicate);
+				return p1.predicateLabel.compareToIgnoreCase(p2.predicateLabel);
 			}
 
 		};

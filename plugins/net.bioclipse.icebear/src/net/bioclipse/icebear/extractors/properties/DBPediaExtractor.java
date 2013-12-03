@@ -24,18 +24,16 @@ public class DBPediaExtractor extends AbstractExtractor implements IPropertyExtr
 	@Override
 	public List<Entry> extractProperties(IRDFStore store, String resource) {
 		List<Entry> props = new ArrayList<Entry>();
-		Map<String,String> resultMap = new HashMap<String, String>();
-		addPredicateToMap(store, resultMap, "Administration", resource, "http://dbpedia.org/property/routesOfAdministration");
-		addPredicateToMap(store, resultMap, "Bioavailability", resource, "http://dbpedia.org/property/bioavailability");
-		addPredicateToMap(store, resultMap, "Boiling point", resource, "http://dbpedia.org/property/boilingPoint");
-		addPredicateToMap(store, resultMap, "Melting point", resource, "http://dbpedia.org/property/meltingPoint");
-//		addResourcePredicateToMap(store, resultMap, "Metabolism", resource, "http://dbpedia.org/property/metabolism");
-//		addResourcePredicateToMap(
-//			store, resultMap, "Excretion", ronURI.toString(), "http://dbpedia.org/property/excretion"
-//		);
-		for (String key : resultMap.keySet()) {
-			String value = resultMap.get(key);
-			props.add(new Entry(resource, key, value));
+		Map<String,String> labelMap = new HashMap<String,String>() {{
+			put("Administration", "http://dbpedia.org/property/routesOfAdministration");
+			put("Bioavailability", "http://dbpedia.org/property/bioavailability");
+			put("Boiling point", "http://dbpedia.org/property/boilingPoint");
+			put("Melting point", "http://dbpedia.org/property/meltingPoint");
+		}};
+		for (String key : labelMap.keySet()) {
+			String value = labelMap.get(key);
+			for (Entry entry : extractEntries(store, key, resource, value))
+				props.add(entry);
 		}
 		return props;
 	}

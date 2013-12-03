@@ -32,9 +32,9 @@ public class SkosExtractor extends AbstractExtractor implements IPropertyExtract
 		for (String label : labels) {
 			if (label.endsWith("@en")) {
 				label = label.substring(0, label.indexOf("@en")); // remove the lang indication
-				props.add(new Entry(resource, Fields.LABEL, label));
+				props.add(new Entry(resource, Fields.LABEL, "http://www.w3.org/2004/02/skos/core#prefLabel", label)); // FIXME
 			} else if (!label.contains("@")) {
-				props.add(new Entry(resource, Fields.LABEL, label));
+				props.add(new Entry(resource, Fields.LABEL, "http://www.w3.org/2004/02/skos/core#prefLabel", label));
 			}
 		}
 
@@ -44,9 +44,9 @@ public class SkosExtractor extends AbstractExtractor implements IPropertyExtract
 		for (String desc : descriptions) {
 			if (desc.endsWith("@en")) {
 				desc = desc.substring(0, desc.indexOf("@en")); // remove the lang indication
-				props.add(new Entry(resource, Fields.DESCRIPTION, desc));
+				props.add(new Entry(resource, Fields.DESCRIPTION, "http://www.w3.org/2004/02/skos/core#definition", desc));
 			} else if (!desc.contains("@")) {
-				props.add(new Entry(resource, Fields.DESCRIPTION, desc));
+				props.add(new Entry(resource, Fields.DESCRIPTION, "http://www.w3.org/2004/02/skos/core#definition", desc));
 			}
 		}
 

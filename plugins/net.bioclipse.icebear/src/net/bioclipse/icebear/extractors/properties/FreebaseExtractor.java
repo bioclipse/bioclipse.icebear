@@ -24,14 +24,16 @@ public class FreebaseExtractor extends AbstractExtractor implements IPropertyExt
 	@Override
 	public List<Entry> extractProperties(IRDFStore store, String resource) {
 		List<Entry> props = new ArrayList<Entry>();
-		Map<String,String> resultMap = new HashMap<String, String>();
-		addPredicateToMap(store, resultMap, "Average molar mass", resource, "http://rdf.freebase.com/ns/chemistry.chemical_compound.average_molar_mass");
-		addPredicateToMap(store, resultMap, "Boiling point", resource, "http://rdf.freebase.com/ns/chemistry.chemical_compound.boiling_point");
-		addPredicateToMap(store, resultMap, "Melting point", resource, "http://rdf.freebase.com/ns/chemistry.chemical_compound.melting_point");
-		addPredicateToMap(store, resultMap, "Density", resource, "http://rdf.freebase.com/ns/chemistry.chemical_compound.density");
-		for (String key : resultMap.keySet()) {
-			String value = resultMap.get(key);
-			props.add(new Entry(resource, key, value));
+		Map<String,String> labelMap = new HashMap<String,String>() {{
+			put("Average molar mass", "http://rdf.freebase.com/ns/chemistry.chemical_compound.average_molar_mass");
+			put("Density", "http://rdf.freebase.com/ns/chemistry.chemical_compound.density");
+			put("Boiling point", "http://rdf.freebase.com/ns/chemistry.chemical_compound.boiling_point");
+			put("Melting point", "http://rdf.freebase.com/ns/chemistry.chemical_compound.density");
+		}};
+		for (String key : labelMap.keySet()) {
+			String value = labelMap.get(key);
+			for (Entry entry : extractEntries(store, key, resource, value))
+				props.add(entry);
 		}
 		return props;
 	}

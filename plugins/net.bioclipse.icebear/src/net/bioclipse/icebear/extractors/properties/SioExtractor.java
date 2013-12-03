@@ -12,6 +12,8 @@ package net.bioclipse.icebear.extractors.properties;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.hp.hpl.jena.vocabulary.RDFS;
+
 import net.bioclipse.core.domain.StringMatrix;
 import net.bioclipse.icebear.business.Entry;
 import net.bioclipse.icebear.extractors.AbstractExtractor;
@@ -48,12 +50,12 @@ public class SioExtractor extends AbstractExtractor implements IPropertyExtracto
 				StringMatrix results = sparql(store, sparql);
 				for (int i=1; i<=results.getRowCount(); i++) {
 					String type = "NA";
-					if (results.get(i, "label") != null) {
+					if (results.hasColumn("label")) {
 						type = results.get(i, "label");
 					} else if (results.get(i, "desc") != null) {
 						type = results.get(i, "desc");
 					}
-					props.add(new Entry(resource, type, results.get(i, "value")));			
+					props.add(new Entry(resource, type, RDFS.label.toString(), results.get(i, "value")));			
 				}
 			}
 		}

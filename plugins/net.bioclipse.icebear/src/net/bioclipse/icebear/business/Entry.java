@@ -25,17 +25,18 @@ public class Entry implements IPropertySource2 {
 	public String resource;
 
 	public String predicate;
+	public String predicateLabel;
 	public String object;
 	
-	public Entry(String resource, String predicate, String object) {
+	public Entry(String resource, String predicate, String predicateURI, String object) {
 		super();
 		this.resource = resource;
-		this.predicate = predicate;
+		this.predicateLabel = predicate;
 		this.object = object;
 	}
 
 	public String toString() {
-		return "[" + predicate + ": " + object + "]";
+		return "[" + predicateLabel + ": " + object + "]";
 	}
 
 	@Override
@@ -44,15 +45,23 @@ public class Entry implements IPropertySource2 {
 	}
 
 	private static final String SOURCE_ID = "isbjorn.source.id";
+	private static final String PREDICATE_URI = "isbjorn.predicate.uri";
 	private static final TextPropertyDescriptor SOURCE_PROPERTY_DESCRIPTOR =
 	     new TextPropertyDescriptor(SOURCE_ID, "Source URI");
 	static {
 		SOURCE_PROPERTY_DESCRIPTOR.setCategory("Linked Data");
 		SOURCE_PROPERTY_DESCRIPTOR.setAlwaysIncompatible(true);
 	}
+	private static final TextPropertyDescriptor PREDICATE_DESCRIPTOR =
+		     new TextPropertyDescriptor(PREDICATE_URI, "Predicate");
+		static {
+			PREDICATE_DESCRIPTOR.setCategory("Linked Data");
+			PREDICATE_DESCRIPTOR.setAlwaysIncompatible(true);
+		}
 
 	private static final IPropertyDescriptor[] DESCRIPTORS = {
-		SOURCE_PROPERTY_DESCRIPTOR
+		SOURCE_PROPERTY_DESCRIPTOR,
+		PREDICATE_DESCRIPTOR
 	};
 
 	@Override
@@ -64,6 +73,8 @@ public class Entry implements IPropertySource2 {
 	public Object getPropertyValue(Object id) {
 		if (SOURCE_ID.equals(id)) {
 			return resource;
+		} else if (PREDICATE_URI.equals(id)) {
+			return predicate;
 		}
 		return null;
 	}

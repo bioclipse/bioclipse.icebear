@@ -27,11 +27,11 @@ public class FoafExtractor extends AbstractExtractor implements IPropertyExtract
 		List<Entry> props = new ArrayList<Entry>();
 		List<String> homepages = getPredicate(store, resource, FOAF.homepage.toString());
 		for (String homepage : homepages) {
-			props.add(new Entry(resource, Fields.HOMEPAGE, homepage));
+			props.add(new Entry(resource, Fields.HOMEPAGE, FOAF.homepage.toString(), homepage));
 		}
 		List<String> pages = getPredicate(store, resource, FOAF.page.toString());
 		for (String page : pages) {
-			props.add(new Entry(resource, Fields.HOMEPAGE, page));
+			props.add(new Entry(resource, Fields.HOMEPAGE, FOAF.homepage.toString(), page));
 		}
 		return props;
 	}

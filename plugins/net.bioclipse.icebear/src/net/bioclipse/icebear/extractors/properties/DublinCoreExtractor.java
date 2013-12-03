@@ -35,9 +35,9 @@ public class DublinCoreExtractor extends AbstractExtractor implements IPropertyE
 		for (String label : labels) {
 			if (label.endsWith("@en")) {
 				label = label.substring(0, label.indexOf("@en")); // remove the lang indication
-				props.add(new Entry(resource, Fields.LABEL, label));
+				props.add(new Entry(resource, Fields.LABEL, DC_10.title.toString(), label)); // FIXME: or DC_11 !
 			} else if (!label.contains("@")) {
-				props.add(new Entry(resource, Fields.LABEL, label));
+				props.add(new Entry(resource, Fields.LABEL, DC_10.title.toString(), label)); // FIXME: or DC_11 !
 			}
 		}
 
@@ -48,9 +48,9 @@ public class DublinCoreExtractor extends AbstractExtractor implements IPropertyE
 		for (String identifier : identifiers) {
 			if (identifier.endsWith("@en")) {
 				identifier = identifier.substring(0, identifier.indexOf("@en")); // remove the lang indication
-				props.add(new Entry(resource, Fields.IDENTIFIER, identifier));
+				props.add(new Entry(resource, Fields.IDENTIFIER, DC_11.identifier.toString(), identifier)); // FIXME
 			} else if (!identifier.contains("@")) {
-				props.add(new Entry(resource, Fields.IDENTIFIER, identifier));
+				props.add(new Entry(resource, Fields.IDENTIFIER, DC_11.identifier.toString(), identifier)); // FIXME
 			}
 		}
 
@@ -59,7 +59,7 @@ public class DublinCoreExtractor extends AbstractExtractor implements IPropertyE
 		descriptions.addAll(getPredicate(store, resource, DC_10.description.toString()));
 		descriptions.addAll(getPredicate(store, resource, DC_11.description.toString()));
 		for (String desc : descriptions) {
-			props.add(new Entry(resource, Fields.DESCRIPTION, desc));
+			props.add(new Entry(resource, Fields.DESCRIPTION, DC_10.description.toString(), desc));
 		}
 		return props;
 	}

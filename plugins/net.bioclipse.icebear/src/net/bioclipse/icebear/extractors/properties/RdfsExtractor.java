@@ -32,9 +32,9 @@ public class RdfsExtractor extends AbstractExtractor implements IPropertyExtract
 		for (String label : labels) {
 			if (label.endsWith("@en")) {
 				label = label.substring(0, label.indexOf("@en")); // remove the lang indication
-				props.add(new Entry(resource, Fields.LABEL, label));
+				props.add(new Entry(resource, Fields.LABEL, RDFS.label.toString(), label));
 			} else if (!label.contains("@")) {
-				props.add(new Entry(resource, Fields.LABEL, label));
+				props.add(new Entry(resource, Fields.LABEL, RDFS.label.toString(), label));
 			}
 		}
 
@@ -42,7 +42,7 @@ public class RdfsExtractor extends AbstractExtractor implements IPropertyExtract
     	List<String> types = new ArrayList<String>();
 		types.addAll(getPredicate(store, resource, RDFS.subClassOf.toString()));
 		for (String type : types) {
-			props.add(new Entry(resource, Fields.TYPE, type));
+			props.add(new Entry(resource, Fields.TYPE, RDFS.subClassOf.toString(), type));
 		}
 
 		return props;

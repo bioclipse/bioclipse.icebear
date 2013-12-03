@@ -25,12 +25,12 @@ public class OpenMoleculesExtractor extends AbstractExtractor implements IProper
 		// PubChem
 		List<String> cids = getPredicate(store, resource, "http://pubchem.ncbi.nlm.nih.gov/#cid");
 		for (String cid : cids) {
-			props.add(new Entry(resource, "PubChem CID", cid));
+			props.add(new Entry(resource, "PubChem CID", "http://pubchem.ncbi.nlm.nih.gov/#cid", cid));
 		}
 		// ChEBI ID
 		List<String> ids = getPredicate(store, resource, "http://rdf.openmolecules.net/#chebiid");
 		for (String id : ids) {
-			props.add(new Entry(resource, "ChEBI ID", id));
+			props.add(new Entry(resource, "ChEBI ID", "http://rdf.openmolecules.net/#chebiid", id));
 		}
 		return props;
 	}

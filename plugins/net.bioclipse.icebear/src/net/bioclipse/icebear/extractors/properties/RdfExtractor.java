@@ -28,7 +28,7 @@ public class RdfExtractor extends AbstractExtractor implements IPropertyExtracto
 		types.addAll(getPredicate(store, resource, RDF.type.toString()));
 		List<Entry> props = new ArrayList<Entry>();
 		for (String type : types) {
-			props.add(new Entry(resource, Fields.TYPE, type));
+			props.add(new Entry(resource, Fields.TYPE, RDF.type.toString(), type));
 		}
 		return props;
 	}

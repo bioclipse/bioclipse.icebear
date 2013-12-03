@@ -9,11 +9,13 @@
  */
 package net.bioclipse.icebear.extractors;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import net.bioclipse.core.domain.StringMatrix;
+import net.bioclipse.icebear.business.Entry;
 import net.bioclipse.rdf.business.IRDFStore;
 import net.bioclipse.rdf.business.RDFManager;
 
@@ -73,6 +75,15 @@ public class AbstractExtractor {
 		if (props.size() > 0) {
 			resultMap.put(label, props.get(0));
 		}
+	}
+
+	protected List<Entry> extractEntries(IRDFStore store, String label, String resource, String predicate) {
+		List<Entry> entries = new ArrayList<Entry>();
+		List<String> props = getPredicate(store, resource, predicate);
+		for (String prop : props) {
+			entries.add(new Entry(resource, label, predicate, prop));
+		}
+		return entries;
 	}
 
 	protected String stripDataType(String id) {

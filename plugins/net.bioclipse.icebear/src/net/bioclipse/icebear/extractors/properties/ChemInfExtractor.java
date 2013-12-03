@@ -34,7 +34,8 @@ public class ChemInfExtractor extends AbstractExtractor implements IPropertyExtr
 			"}";
 		StringMatrix results = sparql(store, sparql);
 		for (int i=1; i<=results.getRowCount(); i++) {
-			props.add(new Entry(resource, results.get(i, "type"), results.get(i, "value")));			
+			String type = results.get(i, "type");
+			props.add(new Entry(resource, type, type, results.get(i, "value")));			
 		}
 		return props;
 	}

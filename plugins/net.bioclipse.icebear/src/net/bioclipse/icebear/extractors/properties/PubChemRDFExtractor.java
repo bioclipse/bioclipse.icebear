@@ -45,7 +45,7 @@ public class PubChemRDFExtractor extends AbstractExtractor implements IPropertyE
   			  "}";
   		    StringMatrix descResults = sparql(store, sparql);
   		    for (int j=1; j<=descResults.getRowCount(); j++) {
-  			    props.add(new Entry(descResource, descResults.get(j, "type"), descResults.get(j, "value")));			
+  			    props.add(new Entry(descResource, descResults.get(j, "type"), "http://semanticscience.org/resource/has-value", descResults.get(j, "value")));			
   	        }
 		}
 
