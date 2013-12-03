@@ -18,6 +18,7 @@ import net.bioclipse.icebear.extractors.AbstractExtractor;
 import net.bioclipse.icebear.extractors.IPropertyExtractor;
 import net.bioclipse.rdf.business.IRDFStore;
 
+import com.hp.hpl.jena.vocabulary.DC;
 import com.hp.hpl.jena.vocabulary.DC_10;
 import com.hp.hpl.jena.vocabulary.DC_11;
 
@@ -29,6 +30,7 @@ public class DublinCoreExtractor extends AbstractExtractor implements IPropertyE
 
 		// extract labels
     	List<String> labels = new ArrayList<String>();
+		labels.addAll(getPredicate(store, resource, DC.title.toString()));
 		labels.addAll(getPredicate(store, resource, DC_10.title.toString()));
 		labels.addAll(getPredicate(store, resource, DC_11.title.toString()));
 		// the first will do fine, but pick the first English one
@@ -43,6 +45,7 @@ public class DublinCoreExtractor extends AbstractExtractor implements IPropertyE
 
 		// extract identifiers
 		List<String> identifiers = new ArrayList<String>();
+		identifiers.addAll(getPredicate(store, resource.toString(), DC.identifier.toString()));
 		identifiers.addAll(getPredicate(store, resource.toString(), DC_10.identifier.toString()));
 		identifiers.addAll(getPredicate(store, resource.toString(), DC_11.identifier.toString()));
 		for (String identifier : identifiers) {
@@ -56,6 +59,7 @@ public class DublinCoreExtractor extends AbstractExtractor implements IPropertyE
 
 		// extract descriptions
 		List<String> descriptions = new ArrayList<String>();
+		descriptions.addAll(getPredicate(store, resource, DC.description.toString()));
 		descriptions.addAll(getPredicate(store, resource, DC_10.description.toString()));
 		descriptions.addAll(getPredicate(store, resource, DC_11.description.toString()));
 		for (String desc : descriptions) {

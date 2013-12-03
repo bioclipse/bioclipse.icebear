@@ -12,7 +12,6 @@ package net.bioclipse.icebear.business;
 import java.io.ByteArrayInputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -29,7 +28,6 @@ import net.bioclipse.cdk.domain.ICDKMolecule;
 import net.bioclipse.core.business.BioclipseException;
 import net.bioclipse.core.domain.IMolecule;
 import net.bioclipse.core.domain.IMolecule.Property;
-import net.bioclipse.core.domain.StringMatrix;
 import net.bioclipse.icebear.extractors.INextURIExtractor;
 import net.bioclipse.icebear.extractors.IPropertyExtractor;
 import net.bioclipse.icebear.extractors.links.DBPediaMinter;
@@ -58,11 +56,9 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 
-import com.hp.hpl.jena.sparql.vocabulary.FOAF;
 import com.hp.hpl.jena.vocabulary.DC;
 import com.hp.hpl.jena.vocabulary.DC_10;
 import com.hp.hpl.jena.vocabulary.DC_11;
-import com.hp.hpl.jena.vocabulary.RDF;
 import com.hp.hpl.jena.vocabulary.RDFS;
 
 public class IcebearManager implements IBioclipseManager {
@@ -366,6 +362,7 @@ public class IcebearManager implements IBioclipseManager {
 		};
 		for (IRDFStore store : stores) {
 			printFoundInformation(pWriter, store, uri);
+			monitor.worked(1);
 		}
 	}
 
@@ -375,29 +372,32 @@ public class IcebearManager implements IBioclipseManager {
 		return id;
 	}
 
-	private void printFoundInformation(PrintWriter pWriter, IRDFStore store, URI ronURI) {
+	private void printFoundInformation(PrintWriter pWriter, IRDFStore store, URI uri) {
+		if (uri.getHost() == null) return; // ignore
+		pWriter.println(
+		  "<h2>" + uri.getHost() + " <a href=\""+ uri.toString() + "\">" +
+		  "<img border=0 src=\"" + ICON + "\" /></a></h2>");
+	    pWriter.println("<ul>");
+
+	    List<Entry> properties;
+		try {
+			properties = getProperties(store);
+		} catch (Exception e) {
+			pWriter.println("</ul>");
+			return;
+		}
 		// get the rdf:type's
 		try {
-			List<String> approvedTypes = new ArrayList<String>();
-			List<String> types = new ArrayList<String>();
-			types.addAll(rdf.getForPredicate(store, ronURI.toString(), RDF.type.toString()));
-			types.addAll(rdf.getForPredicate(store, ronURI.toString(), RDFS.subClassOf.toString()));
-			// only return types for which we have labels
-			if (types.size() > 0) {
-				for (String type : types) {
-					String label = getLabelForResource(store, type, null);
-					if (label != null && label.length() > 0) {
-						System.out.println("Going to output a label for: " + type);
-						approvedTypes.add(type);
-					}
-				}
-			}
+			List<Entry> approvedTypes = new ArrayList<Entry>();
+			for (Entry prop : properties)
+				if (Fields.TYPE.equals(prop.predicateLabel)) approvedTypes.add(prop);
 			// now output what we have left
 			if (approvedTypes.size() > 0) {
 				pWriter.append("<p>");
 				pWriter.println("<b>Is a</b> ");
 				StringBuffer buffer = new StringBuffer();
-				for (String type : approvedTypes) {
+				for (Entry prop : approvedTypes) {
+					String type = prop.predicate;
 					String label = getLabelForResource(store, type, null);
 					buffer.append(label).append(" <a href=\"").append(type)
 						.append("\"><img src=\"").append(ICON ).append("\" /></a>, ");
@@ -407,58 +407,53 @@ public class IcebearManager implements IBioclipseManager {
 				pWriter.append("</p>");
 			}
 		} catch (Throwable exception) {
-			logger.warn("Error while quering for labels for " + ronURI, exception);
+			logger.warn("Error while quering for labels for " + uri, exception);
 		}
 		// get a description
 		try {
-			List<String> descriptions = new ArrayList<String>();
-			descriptions.addAll(rdf.getForPredicate(store, ronURI.toString(), DC.description.toString()));
-			descriptions.addAll(rdf.getForPredicate(store, ronURI.toString(), DC_10.description.toString()));
-			descriptions.addAll(rdf.getForPredicate(store, ronURI.toString(), DC_11.description.toString()));
-			descriptions.addAll(rdf.getForPredicate(store, ronURI.toString(), "http://www.w3.org/2004/02/skos/core#definition"));
-			descriptions.addAll(rdf.getForPredicate(store, ronURI.toString(), "http://bio2rdf.org/drugbank_ontology:description"));
+			List<Entry> descriptions = new ArrayList<Entry>();
+			for (Entry prop : properties)
+				if (Fields.DESCRIPTION.equals(prop.predicateLabel)) descriptions.add(prop);
 			if (descriptions.size() > 0) {
 				pWriter.println("<b>Descriptions</b><br />");
-				for (String desc : descriptions) {
+				for (Entry prop : descriptions) {
 					pWriter.append("<p>");
-					pWriter.println(desc);
+					pWriter.println(prop.predicateLabel);
 					pWriter.append("</p>");
 				}
 			}
 		} catch (Throwable exception) {
-			logger.warn("Error while quering for descriptions for " + ronURI, exception);
+			logger.warn("Error while quering for descriptions for " + uri, exception);
 		}
 		// get visualizations
 		try {
-			List<String> depictions = new ArrayList<String>();
-			depictions.addAll(rdf.getForPredicate(store, ronURI.toString(), FOAF.depiction.toString()));
-			depictions.addAll(rdf.getForPredicate(store, ronURI.toString(), "http://bio2rdf.org/bio2rdf_resource:image"));
-			depictions.addAll(rdf.getForPredicate(store, ronURI.toString(), "http://bio2rdf.org/bio2rdf_resource:urlImage"));
+			List<Entry> depictions = new ArrayList<Entry>();
+			for (Entry prop : properties)
+				if (Fields.IMAGE.equals(prop.predicateLabel)) depictions.add(prop);
 			if (depictions.size() > 0) {
 				pWriter.append("<p>");
-				for (String depiction : depictions) {
-					pWriter.println("<img height=\"80\" src=\"" + depiction + "\" />");
+				for (Entry depiction : depictions) {
+					pWriter.println("<img height=\"80\" src=\"" + depiction.object + "\" />");
 				}
 				pWriter.append("</p>");
 			}
 		} catch (Throwable exception) {
-			logger.warn("Error while quering for images for " + ronURI, exception);
+			logger.warn("Error while quering for images for " + uri, exception);
 		}
 		// get the identifiers
 		try {
-			List<String> identifiers = new ArrayList<String>();
-			identifiers.addAll(rdf.getForPredicate(store, ronURI.toString(), DC.identifier.toString()));
-			identifiers.addAll(rdf.getForPredicate(store, ronURI.toString(), DC_10.identifier.toString()));
-			identifiers.addAll(rdf.getForPredicate(store, ronURI.toString(), DC_11.identifier.toString()));
+			List<Entry> identifiers = new ArrayList<Entry>();
+			for (Entry prop : properties)
+				if (Fields.IDENTIFIER.equals(prop.predicateLabel)) identifiers.add(prop);
 			if (identifiers.size() > 0) {
 				pWriter.println("<p>");
 				pWriter.println("<b>Identifiers</b> ");
 				StringBuffer idString = new StringBuffer();
 				List<String> processedIdentifiers = new ArrayList<String>();
-				for (String identifier : identifiers) {
-					if (!processedIdentifiers.contains(identifier)) {
+				for (Entry identifier : identifiers) {
+					if (!processedIdentifiers.contains(identifier.object)) {
 						idString.append(identifier).append(", ");
-						processedIdentifiers.add(identifier);
+						processedIdentifiers.add(identifier.object);
 					}
 				}
 				String fullString = idString.toString();
@@ -466,166 +461,60 @@ public class IcebearManager implements IBioclipseManager {
 				pWriter.println("</p>");
 			}
 		} catch (Throwable exception) {
-			logger.warn("Error while quering for identifiers for " + ronURI, exception);
+			logger.warn("Error while quering for identifiers for " + uri, exception);
 		}
 		// get the labels
 		try {
-			List<String> labels = new ArrayList<String>();
-			labels.addAll(rdf.getForPredicate(store, ronURI.toString(), RDFS.label.toString()));
-			labels.addAll(rdf.getForPredicate(store, ronURI.toString(), "http://bio2rdf.org/obo_resource:synonym"));
-			labels.addAll(rdf.getForPredicate(store, ronURI.toString(), "http://bio2rdf.org/drugbank_ontology:synonym"));
-			labels.addAll(rdf.getForPredicate(store, ronURI.toString(), "http://www.w3.org/2004/02/skos/core#prefLabel"));
-			labels.addAll(rdf.getForPredicate(store, ronURI.toString(), "http://www.w3.org/2004/02/skos/core#altLabel"));
-			labels.addAll(rdf.getForPredicate(store, ronURI.toString(), "http://bio2rdf.org/bio2rdf_resource:synonym"));
+			List<Entry> labels = new ArrayList<Entry>();
+			for (Entry prop : properties)
+				if (Fields.LABEL.equals(prop.predicateLabel)) labels.add(prop);
 			if (labels.size() > 0) {
 				pWriter.println("<p>");
 				pWriter.println("<b>Synonyms</b> ");
 				StringBuffer labelString = new StringBuffer();
-				for (String label : labels) {
-					labelString.append(label).append(", ");
+				for (Entry label : labels) {
+					labelString.append(label.object).append(", ");
 				}
 				String fullString = labelString.toString();
 				pWriter.println(fullString.substring(0, fullString.length()-2));
 				pWriter.println("</p>");
 			}
 		} catch (Throwable exception) {
-			logger.warn("Error while quering for labels for " + ronURI, exception);
+			logger.warn("Error while quering for labels for " + uri, exception);
 		}
 		// get the (home)pages
 		try {
-			List<String> homepages = rdf.getForPredicate(store, ronURI.toString(), FOAF.homepage.toString());
+			List<Entry> homepages = new ArrayList<Entry>();
+			for (Entry prop : properties)
+				if (Fields.HOMEPAGE.equals(prop.predicateLabel)) homepages.add(prop);
 			if (homepages.size() > 0) {
 				pWriter.println("<b><a href=\"" + homepages.get(0) + "\">Homepage</a></b><br />");
 			}
 		} catch (Throwable exception) {
-			logger.warn("Error while quering for homepages for " + ronURI, exception);
+			logger.warn("Error while quering for web pages for " + uri, exception);
 		}
-		try {
-			List<String> homepages = rdf.getForPredicate(store, ronURI.toString(), FOAF.page.toString());
-			if (homepages.size() > 0) {
-				pWriter.println("<b><a href=\"" + homepages.get(0) + "\">Homepage</a></b><br />");
-			}
-		} catch (Throwable exception) {
-			logger.warn("Error while quering for web pages for " + ronURI, exception);
+		// all other properties
+		List<Entry> theRest = new ArrayList<Entry>();
+		for (Entry prop : properties) {
+			if (!Fields.HOMEPAGE.equals(prop.predicateLabel) &&
+				!Fields.LABEL.equals(prop.predicateLabel) &&
+				!Fields.DESCRIPTION.equals(prop.predicateLabel) &&
+				!Fields.IDENTIFIER.equals(prop.predicateLabel) &&
+				!Fields.IMAGE.equals(prop.predicateLabel) &&
+				!Fields.TYPE.equals(prop.predicateLabel))
+			    theRest.add(prop);
 		}
-		// get ChemAxiom properties (for a chemical species)
-		if (ronURI.toString().startsWith("http://www.chemspider.com/")) {
-			final String sparql =
-				"PREFIX chemdomain:  <http://www.polymerinformatics.com/ChemAxiom/ChemDomain.owl#>\n" +
-				"SELECT ?type ?value WHERE {" +
-				"  <" + ronURI.toString() + "> chemdomain:hasPart ?part ." +
-				"  ?part chemdomain:hasIdentifier ?ident ." +
-				"  ?ident chemdomain:hasValue ?value ;" +
-				"    a ?type . " +
-				"}";
-			try {
-				StringMatrix results = rdf.sparql(store, sparql);
-				outputTable(pWriter, results, "type", "value");
-			} catch (Throwable exception) {
-				logger.debug("Error while finding ChemAxiom properties: " + exception.getMessage(), exception);
-			}
+		pWriter.println("<table border='0'>");
+		for (Entry key : theRest) {
+			pWriter.println("  <tr>");
+			pWriter.println("    <td valign=\"top\"><b>" + key.predicateLabel + "</b></td>");
+			String property = stripDataType(key.object);
+			pWriter.println("    <td valign=\"top\">" + property + "</td>");
+			pWriter.println("  </tr>");
 		}
-		// get CHEMINF properties
-		String[] SIO_HAS_ATTRIBUTE = {
-			"http://semanticscience.org/resource/CHEMINF_000200",
-			"http://semanticscience.org/resource/has-attribute",
-			"http://semanticscience.org/resource/SIO_000008"
-		};
-		String[] SIO_HAS_VALUE = {
-			"http://semanticscience.org/resource/has-value",
-			"http://semanticscience.org/resource/SIO_000300"
-		};
+		pWriter.println("</table>");
 
-		try {
-			Map<String,String> props = new HashMap<String, String>(); 
-			for (String hasAttribute : SIO_HAS_ATTRIBUTE) {
-				for (String hasValue : SIO_HAS_VALUE) {
-					// get SIO properties
-					String sparql =
-						"PREFIX sio: <http://semanticscience.org/resource/>\n" +
-						"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n" +
-						"SELECT ?label ?desc ?value WHERE {" +
-						"  <" + ronURI.toString() + "> <" + hasAttribute + "> ?property ." +
-						"  ?property <" + hasValue + "> ?value ." +
-						"  OPTIONAL { ?property a ?desc . } " +
-						"  OPTIONAL { ?property rdfs:label ?label . }" +
-						"}";
-					StringMatrix results = rdf.sparql(store, sparql);
-					for (int i=1; i<=results.getRowCount(); i++) {
-						String type = "NA";
-						if (results.get(i, "label") != null) {
-							type = results.get(i, "label");
-						} else if (results.get(i, "desc") != null) {
-							type = results.get(i, "desc");
-						}
-						props.put(type, results.get(i, "value"));			
-					}
-				}
-			}
-			outputTable(pWriter, props);
-		} catch (Throwable exception) {
-			logger.debug("Error while finding CHEMINF (PubChem style) properties: " + exception.getMessage(), exception);
-		}
-		// get Bio2RDF properties
-		if (ronURI.toString().startsWith("http://bio2rdf.org/")) {
-			Map<String,String> resultMap = new HashMap<String, String>();
-			addPredicateToMap(store, resultMap, "Mass", ronURI.toString(), "http://bio2rdf.org/bio2rdf_resource:mass");
-			addPredicateToMap(store, resultMap, "SMILES", ronURI.toString(), "http://bio2rdf.org/bio2rdf_resource:smiles");
-			addResourcePredicateToMap(store, resultMap, "Conjugate Base", ronURI.toString(), "http://bio2rdf.org/obo_resource:is_conjugate_base_of");
-			addResourcePredicateToMap(store, resultMap, "Functional Parent", ronURI.toString(), "http://bio2rdf.org/obo_resource:has_functional_parent");
-			addPredicateToMap(store, resultMap, "Charge", ronURI.toString(), "http://bio2rdf.org/bio2rdf_resource:charge");
-			addPredicateToMap(store, resultMap, "Formula", ronURI.toString(), "http://bio2rdf.org/bio2rdf_resource:formula");
-			addPredicateToMap(store, resultMap, "IUPAC name", ronURI.toString(), "http://bio2rdf.org/bio2rdf_resource:iupacName");
-			addPredicateToMap(store, resultMap, "CACO2 permeability", ronURI.toString(), "http://bio2rdf.org/drugbank_ontology:experimentalCaco2Permeability");
-			addPredicateToMap(store, resultMap, "LogP", ronURI.toString(), "http://bio2rdf.org/drugbank_ontology:experimentalLogpHydrophobicity");
-			addPredicateToMap(store, resultMap, "Water solubility", ronURI.toString(), "http://bio2rdf.org/drugbank_ontology:experimentalWaterSolubility");
-			addPredicateToMap(store, resultMap, "Food interactions", ronURI.toString(), "http://bio2rdf.org/drugbank_ontology:foodInteraction");
-			addPredicateToMap(store, resultMap, "Mechanism of action", ronURI.toString(), "http://bio2rdf.org/drugbank_ontology:mechanismOfAction");
-			addPredicateToMap(store, resultMap, "Melting point", ronURI.toString(), "http://bio2rdf.org/drugbank_ontology:meltingPoint");
-			addPredicateToMap(store, resultMap, "Monoisotopic mass", ronURI.toString(), "http://bio2rdf.org/drugbank_ontology:molecularWeightMono");
-			addPredicateToMap(store, resultMap, "Isoelectric point", ronURI.toString(), "http://bio2rdf.org/drugbank_ontology:pkaIsoelectricPoint");
-			addPredicateToMap(store, resultMap, "Toxicity", ronURI.toString(), "http://bio2rdf.org/drugbank_ontology:toxicity");
-			addPredicateToMap(store, resultMap, "Protein binding", ronURI.toString(), "http://bio2rdf.org/drugbank_ontology:primaryAccessionNo");
-			addPredicateToMap(store, resultMap, "Pharmacology", ronURI.toString(), "http://bio2rdf.org/drugbank_ontology:pharmacology");
-			addPredicateToMap(store, resultMap, "Biotransformation", ronURI.toString(), "http://bio2rdf.org/drugbank_ontology:biotransformation");
-			addResourcePredicateToMap(store, resultMap, "Categories", ronURI.toString(), "http://bio2rdf.org/drugbank_ontology:drugCategory");
-			addResourcePredicateToMap(store, resultMap, "Dosage forms", ronURI.toString(), "http://bio2rdf.org/drugbank_ontology:dosageForm");
-			addResourcePredicateToMap(
-				store, resultMap, "Drug interactions", ronURI.toString(), "http://bio2rdf.org/drugbank_ontology:dosageForm",
-				"http://bio2rdf.org/drugbank_druginteractions:" // only list drug-drug interactions
-			);
-			outputTable(pWriter, resultMap);
-		}
-		// get DBPedia properties
-		if (ronURI.toString().startsWith("http://dbpedia.org/resource/")) {
-			Map<String,String> resultMap = new HashMap<String, String>();
-			addPredicateToMap(store, resultMap, "Administration", ronURI.toString(), "http://dbpedia.org/property/routesOfAdministration");
-			addPredicateToMap(store, resultMap, "Bioavailability", ronURI.toString(), "http://dbpedia.org/property/bioavailability");
-			addPredicateToMap(store, resultMap, "Boiling point", ronURI.toString(), "http://dbpedia.org/property/boilingPoint");
-			addPredicateToMap(store, resultMap, "Melting point", ronURI.toString(), "http://dbpedia.org/property/meltingPoint");
-			addResourcePredicateToMap(store, resultMap, "Metabolism", ronURI.toString(), "http://dbpedia.org/property/metabolism");
-			addResourcePredicateToMap(
-				store, resultMap, "Excretion", ronURI.toString(), "http://dbpedia.org/property/excretion"
-			);
-			outputTable(pWriter, resultMap);
-		}
-		// get FreeBase properties
-		if (ronURI.toString().startsWith("http://rdf.freebase.com/ns/")) {
-			Map<String,String> resultMap = new HashMap<String, String>();
-			addPredicateToMap(store, resultMap, "Average molar mass", ronURI.toString(), "http://rdf.freebase.com/ns/chemistry.chemical_compound.average_molar_mass");
-			addPredicateToMap(store, resultMap, "Boiling point", ronURI.toString(), "http://rdf.freebase.com/ns/chemistry.chemical_compound.boiling_point");
-			addPredicateToMap(store, resultMap, "Melting point", ronURI.toString(), "http://rdf.freebase.com/ns/chemistry.chemical_compound.melting_point");
-			addPredicateToMap(store, resultMap, "Density", ronURI.toString(), "http://rdf.freebase.com/ns/chemistry.chemical_compound.density");
-			outputTable(pWriter, resultMap);
-		}
-		// get FU Berlin LODD properties
-		if (ronURI.toString().startsWith("http://www4.wiwiss.fu-berlin.de/")) {
-			Map<String,String> resultMap = new HashMap<String, String>();
-			addPredicateToMap(store, resultMap, "Absorption", ronURI.toString(), "http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/abdsorption");
-			addResourcePredicateToMap(store, resultMap, "Targets", ronURI.toString(), "http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/target");
-			addResourcePredicateToMap(store, resultMap, "Side effects", ronURI.toString(), "http://www4.wiwiss.fu-berlin.de/sider/resource/sider/sideEffect");
-			outputTable(pWriter, resultMap);
-		}
+	    pWriter.println("</ul>");
 	}
 
 	private String getLabelForResource(IRDFStore currentStore, String resource, IProgressMonitor monitor) {
@@ -690,79 +579,6 @@ public class IcebearManager implements IBioclipseManager {
 		return Collections.emptyList();
 	}
 	
-	// only works for one property per predicate
-	private void addPredicateToMap(IRDFStore store, Map<String, String> resultMap, String label, String resource, String predicate) {
-		try {
-			List<String> props = rdf.getForPredicate(store, resource, predicate);
-			if (props.size() > 0) {
-				resultMap.put(label, props.get(0));
-				System.out.println("Adding " + label + " -> " + props.get(0));
-			}
-		} catch (BioclipseException exception) {
-			logger.debug("Error while getting Bio2RDF props: " + exception.getMessage(), exception);
-		}
-	}
-
-	private void addResourcePredicateToMap(IRDFStore store, Map<String, String> resultMap, String label, String resource, String predicate) {
-		addResourcePredicateToMap(store, resultMap, label, resource, predicate, null);
-	}
-	private void addResourcePredicateToMap(IRDFStore store, Map<String, String> resultMap, String label, String resource, String predicate, String uriFilter) {
-		try {
-			List<String> props = rdf.getForPredicate(store, resource, predicate);
-			if (props.size() > 0) {
-				StringBuffer buffer = new StringBuffer();
-				for (String objectURI : props) {
-					if (uriFilter == null || objectURI.contains(uriFilter)) {
-						String objectLabel = getLabelForResource(store, objectURI, null);
-						if (objectLabel != null && objectLabel.length() > 0) {
-							System.out.println("Adding " + label + " -> " + props.get(0));
-							buffer.append(objectLabel).append(" <a href=\"")
-							    .append(objectLabel).append("\"><img src=\"")
-							    .append(ICON).append("\" /></a>, "
-							);
-						} else {
-							logger.debug("Could not find a label for: " + objectURI);
-						}
-					}
-				}
-				String result = buffer.toString();
-				if (result.length() > 2)
-					result = result.substring(0, result.length()-2);
-				resultMap.put(label, result);
-			}
-		} catch (BioclipseException exception) {
-			logger.debug("Error while getting Bio2RDF props: " + exception.getMessage(), exception);
-		}
-	}
-
-	private void outputTable(PrintWriter pWriter, StringMatrix results,
-			String string, String string2) {
-		if (results.getRowCount() > 0) {
-			pWriter.println("<table border='0'>");
-			for (int i=1; i<=results.getRowCount(); i++) {
-				pWriter.println("  <tr>");
-				pWriter.println("    <td valign=\"top\"><b>" + results.get(i, string) + "</b></td>");
-				pWriter.println("    <td valign=\"top\">" + results.get(i, string2) + "</td>");
-				pWriter.println("  </tr>");
-			}
-			pWriter.println("</table>");
-		}
-	}
-
-	private void outputTable(PrintWriter pWriter, Map<String,String> results) {
-		if (results.size() > 0) {
-			pWriter.println("<table border='0'>");
-			for (String key : results.keySet()) {
-				pWriter.println("  <tr>");
-				pWriter.println("    <td valign=\"top\"><b>" + key + "</b></td>");
-				String property = stripDataType(results.get(key));
-				pWriter.println("    <td valign=\"top\">" + property + "</td>");
-				pWriter.println("  </tr>");
-			}
-			pWriter.println("</table>");
-		}
-	}
-
 	class IcebearWorkload {
 		
 		Set<URI> todo = new HashSet<URI>();

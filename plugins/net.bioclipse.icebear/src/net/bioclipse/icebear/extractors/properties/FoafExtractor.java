@@ -31,7 +31,11 @@ public class FoafExtractor extends AbstractExtractor implements IPropertyExtract
 		}
 		List<String> pages = getPredicate(store, resource, FOAF.page.toString());
 		for (String page : pages) {
-			props.add(new Entry(resource, Fields.HOMEPAGE, FOAF.homepage.toString(), page));
+			props.add(new Entry(resource, Fields.HOMEPAGE, FOAF.page.toString(), page));
+		}
+		List<String> images = getPredicate(store, resource, FOAF.depiction.toString());
+		for (String image : images) {
+			props.add(new Entry(resource, Fields.IMAGE, FOAF.depiction.toString(), image));
 		}
 		return props;
 	}

@@ -28,10 +28,11 @@ public class Entry implements IPropertySource2 {
 	public String predicateLabel;
 	public String object;
 	
-	public Entry(String resource, String predicate, String predicateURI, String object) {
+	public Entry(String resource, String predicateLabel, String predicateURI, String object) {
 		super();
 		this.resource = resource;
-		this.predicateLabel = predicate;
+		this.predicate = predicateURI;
+		this.predicateLabel = predicateLabel;
 		this.object = object;
 	}
 

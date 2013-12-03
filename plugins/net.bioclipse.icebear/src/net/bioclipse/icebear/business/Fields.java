@@ -16,5 +16,6 @@ public class Fields {
 	public final static String IDENTIFIER = "Identifier";
 	public final static String LABEL = "Label";
 	public final static String TYPE = "Type";
+	public static final String IMAGE = "Image";
 
 }
