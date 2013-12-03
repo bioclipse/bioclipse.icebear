@@ -164,6 +164,17 @@ public class IcebearManager implements IBioclipseManager {
 		}
     }
     
+    public void findInfo(String uri, IReturner<IRDFStore> returner, IProgressMonitor monitor)
+    throws BioclipseException {
+    	monitor.beginTask("Downloading RDF resources", 100);
+		IcebearWorkload workload = new IcebearWorkload();
+		workload.addNewURI(uri);
+		while (workload.hasMoreWork() && !monitor.isCanceled()) {
+			findInfoForOneURI(workload, returner, monitor);
+	    	monitor.worked(1);
+		}
+    }
+    
     public List<Entry> getProperties(IRDFStore store) throws BioclipseException, CoreException {
     	String resource = rdf.getForPredicate(store,
     		"http://www.bioclipse.org/PrimaryObject",

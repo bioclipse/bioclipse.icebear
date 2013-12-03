@@ -45,6 +45,14 @@ public interface IIcebearManager extends IBioclipseManager {
     
     @Recorded
     @PublishedMethod(
+        params = "String uri",
+        methodSummary = "Find information about a molecule starting with the seed URI and return it as RDF stores." )
+    public List<IRDFStore> findInfo(String uri) throws BioclipseException;
+    public BioclipseJob<IRDFStore> findInfo(String uri, BioclipseJobUpdateHook<IRDFStore> hook) 
+    throws BioclipseException;
+
+    @Recorded
+    @PublishedMethod(
         params = "String uri, String filename",
         methodSummary = "Find information about this molecule and save it as a HTML file." )
     public String findInfo(String uri, String filename) throws BioclipseException, CoreException;
