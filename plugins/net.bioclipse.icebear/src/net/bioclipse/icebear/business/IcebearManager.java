@@ -207,7 +207,7 @@ public class IcebearManager implements IBioclipseManager {
 				}
 			}
 		} catch (Exception exception) {
-			exception.printStackTrace();
+			logger.debug("Error while downloading " + nextURIString + ": " + exception.getMessage());
 		}
     	returner.partialReturn(store);
     }
