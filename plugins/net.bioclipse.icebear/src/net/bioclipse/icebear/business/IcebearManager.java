@@ -43,6 +43,7 @@ import net.bioclipse.icebear.extractors.properties.DublinCoreExtractor;
 import net.bioclipse.icebear.extractors.properties.FoafExtractor;
 import net.bioclipse.icebear.extractors.properties.FreebaseExtractor;
 import net.bioclipse.icebear.extractors.properties.OpenMoleculesExtractor;
+import net.bioclipse.icebear.extractors.properties.PubChemRDFExtractor;
 import net.bioclipse.icebear.extractors.properties.RdfsExtractor;
 import net.bioclipse.icebear.extractors.properties.SioExtractor;
 import net.bioclipse.icebear.extractors.properties.SkosExtractor;
@@ -128,6 +129,7 @@ public class IcebearManager implements IBioclipseManager {
 		add(new OpenMoleculesExtractor());
 		add(new DBPediaExtractor());
 		add(new FreebaseExtractor());
+		add(new PubChemRDFExtractor());
 	}};
 	private List<INextURIExtractor> spiders = new ArrayList<INextURIExtractor>() {
 		private static final long serialVersionUID = 7089854109617759948L; {
