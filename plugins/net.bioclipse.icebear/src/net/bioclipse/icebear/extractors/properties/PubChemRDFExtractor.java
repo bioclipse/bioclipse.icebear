@@ -34,9 +34,12 @@ public class PubChemRDFExtractor extends AbstractExtractor implements IPropertyE
 			"}";
 		StringMatrix results = sparql(store, sparql);
 		for (int i=1; i<=results.getRowCount(); i++) {
+			try {
+				Thread.sleep(50); // be a bit friendly to PubChem
+			} catch (InterruptedException e) {
+			}
 			String descResource = results.get(i, "desc");
 			System.out.println("Desc resource: " + descResource);
-  	        getAdditionalTriples(store, descResource);
   		    sparql =
   		  	  "PREFIX resource:  <http://semanticscience.org/resource/>\n" +
   	 		  "SELECT ?type ?value WHERE {" +
@@ -44,6 +47,11 @@ public class PubChemRDFExtractor extends AbstractExtractor implements IPropertyE
   			  "    a ?type . " +
   			  "}";
   		    StringMatrix descResults = sparql(store, sparql);
+  		    if (descResults.getRowCount() == 0 ) {
+  		    	// try to get new results, only if we do not already have results
+  		    	getAdditionalTriples(store, descResource);
+  		    	descResults = sparql(store, sparql);
+  		    }
   		    for (int j=1; j<=descResults.getRowCount(); j++) {
   			    props.add(new Entry(descResource, descResults.get(j, "type"), "http://semanticscience.org/resource/has-value", descResults.get(j, "value")));			
   	        }
