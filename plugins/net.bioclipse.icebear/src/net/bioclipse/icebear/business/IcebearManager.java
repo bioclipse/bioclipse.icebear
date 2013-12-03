@@ -461,7 +461,7 @@ public class IcebearManager implements IBioclipseManager {
 						System.out.println("PubChem: " + id);
 						// recurse
 						try {
-							URI sameURI = new URI("http://pubchem.ncbi.nlm.nih.gov/rest/rdf/PUBCHEM_CID" + id);
+							URI sameURI = new URI("http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID" + id);
 							useUniveRsalIcebearPowers(pWriter, sameURI, alreadyDone, monitor);	
 						} catch (URISyntaxException exception) {
 							logger.debug("Error while getting the PubChem RDF: " + exception.getMessage(), exception);
