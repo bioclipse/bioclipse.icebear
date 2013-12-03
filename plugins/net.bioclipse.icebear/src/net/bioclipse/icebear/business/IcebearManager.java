@@ -355,171 +355,18 @@ public class IcebearManager implements IBioclipseManager {
 
 	@SuppressWarnings("unused")
 	private void useUniveRsalIcebearPowers(PrintWriter pWriter, URI uri, List<String> alreadyDone, IProgressMonitor monitor) {
-		if (uri.toString().startsWith("http://data.linkedct.org") ||
-		    uri.toString().startsWith("http://bio2rdf.org/linkedct_intervention") || // ignore LinkedCT which is broken
-		    uri.toString().startsWith("http://bio2rdf.org/drugbank_drugs:") // no longer used by Bio2RDF
-		) {
-			return;
-		}
-		
-		alreadyDone.add(uri.toString());
-		monitor.setTaskName("Downloading " + uri.toString());
-		System.out.println("Downloading " + uri.toString());
-		IRDFStore store = rdf.createInMemoryStore();
-		if (uri.getHost() == null) return; // ignore
-		pWriter.println(
-			"<h2>" + uri.getHost() + " <a href=\""+ uri.toString() + "\">" +
-			"<img border=0 src=\"" + ICON + "\" /></a></h2>");
-		pWriter.println("<ul>");
-		try {
-			rdf.importURL(store, uri.toString(), extraHeaders, monitor);
-			String uriString = uri.toString();
-			if (uriString.startsWith("http://rdf.freebase.com/ns/m/")) {
-				uri = new URI(uri.toString().replace("http://rdf.freebase.com/ns/m/", "http://rdf.freebase.com/ns/m."));
+		final List<IRDFStore> stores = new ArrayList<IRDFStore>();
+		IReturner<IRDFStore> storesCatcher = new IReturner<IRDFStore>() {
+			@Override public void partialReturn(IRDFStore object) {
+				stores.add(object);
 			}
-			System.out.println(rdf.asRDFN3(store)); // so that I can check what is there...
+			@Override public void completeReturn(IRDFStore object) {
+				stores.add(object);
+			}
+		};
+		for (IRDFStore store : stores) {
 			printFoundInformation(pWriter, store, uri);
-			if (uriString.startsWith("http://rdf.freebase.com/ns/")) {
-				// OK, don't recurse from here... that explodes, sad enough
-				return;
-			}
-			// and recurse: owl:sameAs
-			List<String> sameResources = rdf.allOwlSameAs(store, uri.toString());
-			for (String sameResource : sameResources) {
-				// OK, work around a bug in rdf.openmolecules.net
-				if (sameResource.startsWith("http://www.chemspider.com/Chemical-Structure.") &&
-					sameResource.endsWith(".rdf")) {
-					sameResource = sameResource + "#Compound";
-				}
-				if (!alreadyDone.contains(sameResource)) {
-					try {
-						URI sameURI = new URI(sameResource);
-						useUniveRsalIcebearPowers(pWriter, sameURI, alreadyDone, monitor);
-						if (false) throw new SocketTimeoutException();
-					} catch (SocketTimeoutException timeOutException) {
-						pWriter.println("<p><i>Timed out</i></p>");
-					} catch (URISyntaxException exception) {
-						// ignore resource
-					}
-				}
-			}
-			// and recurse more: owl:equivalentClass
-			sameResources = rdf.allOwlEquivalentClass(store, uri.toString());
-			for (String sameResource : sameResources) {
-				if (!alreadyDone.contains(sameResource)) {
-					try {
-						URI sameURI = new URI(sameResource);
-						useUniveRsalIcebearPowers(pWriter, sameURI, alreadyDone, monitor);	
-					} catch (URISyntaxException exception) {
-						// ignore resource
-					}
-				}
-			}
-			// and recurse more: skos:exactMatch
-			sameResources = rdf.getForPredicate(store, uri.toString(), "http://www.w3.org/2004/02/skos/core#exactMatch");
-			for (String sameResource : sameResources) {
-				if (!alreadyDone.contains(sameResource)) {
-					try {
-						URI sameURI = new URI(sameResource);
-						useUniveRsalIcebearPowers(pWriter, sameURI, alreadyDone, monitor);	
-					} catch (URISyntaxException exception) {
-						// ignore resource
-					}
-				}
-			}
-			// get identifiers from DBPedia
-			if (uri.toString().startsWith("http://dbpedia.org/resource")) {
-				try {
-					List<String> casNumbers = rdf.getForPredicate(store, uri.toString(), "http://dbpedia.org/ontology/casNumber");
-					for (String cas : casNumbers) {
-						System.out.println("CAS reg number: " + cas);
-						// recurse
-						try {
-							URI sameURI = new URI("http://bio2rdf.org/cas:" + cas);
-							useUniveRsalIcebearPowers(pWriter, sameURI, alreadyDone, monitor);	
-						} catch (URISyntaxException exception) {
-							logger.debug("Error while getting the CAS RDF: " + exception.getMessage(), exception);
-						}
-					}
-				} catch (BioclipseException exeption) {} // just ignore
-				try {
-					List<String> drugBankIDs = rdf.getForPredicate(store, uri.toString(), "http://dbpedia.org/ontology/drugbank");
-					for (String drugbank : drugBankIDs) {
-						System.out.println("Drugbank code: " + drugbank);
-						// recurse
-						try {
-							URI sameURI = new URI("http://bio2rdf.org/drugbank_drugs:" + drugbank);
-							useUniveRsalIcebearPowers(pWriter, sameURI, alreadyDone, monitor);	
-						} catch (URISyntaxException exception) {
-							logger.debug("Error while getting the DrugBank RDF: " + exception.getMessage(), exception);
-						}
-					}
-				} catch (BioclipseException exeption) {} // just ignore
-				try {
-					List<String> ids = rdf.getForPredicate(store, uri.toString(), "http://dbpedia.org/ontology/pubchem");
-					for (String id : ids) {
-						System.out.println("PubChem: " + id);
-						// recurse
-						try {
-							URI sameURI = new URI("http://rdf.ncbi.nlm.nih.gov/pubchem/compound/CID" + id);
-							useUniveRsalIcebearPowers(pWriter, sameURI, alreadyDone, monitor);	
-						} catch (URISyntaxException exception) {
-							logger.debug("Error while getting the PubChem RDF: " + exception.getMessage(), exception);
-						}
-					}
-				} catch (BioclipseException exeption) {} // just ignore
-				try {
-					List<String> ids = rdf.getForPredicate(store, uri.toString(), "http://dbpedia.org/property/chembl");
-					for (String id : ids) {
-						id = stripDataType(id);
-						System.out.println("CHEMBL: " + id);
-						// recurse
-						try {
-							URI sameURI = new URI("http://linkedchemistry.info/chembl/chemblid/CHEMBL" + id);
-							useUniveRsalIcebearPowers(pWriter, sameURI, alreadyDone, monitor);	
-						} catch (URISyntaxException exception) {
-							logger.debug("Error while getting the ChEMBL-RDF: " + exception.getMessage(), exception);
-						}
-					}
-				} catch (BioclipseException exeption) {} // just ignore
-				try {
-					List<String> ids = rdf.getForPredicate(store, uri.toString(), "http://dbpedia.org/property/chebi");
-					for (String id : ids) {
-						id = stripDataType(id);
-						System.out.println("ChEBI: " + id);
-						// recurse
-						try {
-							URI sameURI = new URI("http://bio2rdf.org/chebi:" + id);
-							useUniveRsalIcebearPowers(pWriter, sameURI, alreadyDone, monitor);	
-						} catch (URISyntaxException exception) {
-							logger.debug("Error while getting the ChEMBL-RDF: " + exception.getMessage(), exception);
-						}
-					}
-				} catch (BioclipseException exeption) {} // just ignore
-				try {
-					List<String> ids = rdf.getForPredicate(store, uri.toString(), "http://dbpedia.org/property/kegg");
-					for (String id : ids) {
-						System.out.println("KEGG: " + id);
-						// recurse
-						try {
-							if (id.startsWith("C")) {
-								URI sameURI = new URI("http://bio2rdf.org/cpd:" + id);
-								useUniveRsalIcebearPowers(pWriter, sameURI, alreadyDone, monitor);	
-							} else if (id.startsWith("D")) {
-								URI sameURI = new URI("http://bio2rdf.org/dr:" + id);
-								useUniveRsalIcebearPowers(pWriter, sameURI, alreadyDone, monitor);	
-							}
-						} catch (URISyntaxException exception) {
-							logger.debug("Error while getting the KEGG RDF: " + exception.getMessage(), exception);
-						}
-					}
-				} catch (BioclipseException exeption) {} // just ignore
-			}
-		} catch (Throwable exception) {
-			logger.warn("Something wrong during IO for " + uri.toString() + ": " + exception.getMessage(), exception);
 		}
-		pWriter.println("</ul>");
-		monitor.worked(1);
 	}
 
 	private String stripDataType(String id) {
