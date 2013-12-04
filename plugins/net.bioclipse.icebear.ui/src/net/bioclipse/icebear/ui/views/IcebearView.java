@@ -97,7 +97,7 @@ public class IcebearView extends ViewPart{
 		column.setLabelProvider(new ColumnLabelProvider() {
 
 			public String getText(Object element) {
-				return ((Entry) element).predicate;
+				return ((Entry) element).predicateLabel;
 			}
 		});
 
