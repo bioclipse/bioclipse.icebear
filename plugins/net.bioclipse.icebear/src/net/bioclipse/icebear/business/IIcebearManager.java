@@ -30,12 +30,6 @@ public interface IIcebearManager extends IBioclipseManager {
 
     @Recorded
     @PublishedMethod(
-        params = "IMolecule mol, String filename",
-        methodSummary = "Find information about this molecule and save it as a HTML file." )
-    public String findInfo(IMolecule mol, String filename) throws BioclipseException, CoreException;
-
-    @Recorded
-    @PublishedMethod(
         params = "IMolecule mol",
         methodSummary = "Find information about this molecule and return it as RDF stores." )
     public List<IRDFStore> findInfo(IMolecule mol) throws BioclipseException;
@@ -53,9 +47,9 @@ public interface IIcebearManager extends IBioclipseManager {
 
     @Recorded
     @PublishedMethod(
-        params = "String uri, String filename",
-        methodSummary = "Find information about this molecule and save it as a HTML file." )
-    public String findInfo(String uri, String filename) throws BioclipseException, CoreException;
+        params = "List<IRDFStore> stores, String filename",
+        methodSummary = "Find information in the RDF stores and save it as a HTML file." )
+    public String saveAsHTML(List<IRDFStore> stores, String filename) throws BioclipseException, CoreException;
 
     @Recorded
     @PublishedMethod(

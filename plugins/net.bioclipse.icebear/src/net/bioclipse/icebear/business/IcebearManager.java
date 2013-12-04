@@ -208,12 +208,9 @@ public class IcebearManager implements IBioclipseManager {
     	returner.partialReturn(store);
     }
     
-    public IFile findInfo( IMolecule mol, IFile target, IProgressMonitor monitor) throws BioclipseException, CoreException {
-    	if (!bioclipse.isOnline())
-    		throw new BioclipseException("Searching information on the web requires an active internet connection.");
-
+    public IFile saveAsHTML(List<IRDFStore> stores, IFile target, IProgressMonitor monitor) throws BioclipseException, CoreException {
     	if (monitor == null) monitor = new NullProgressMonitor();
-    	monitor.beginTask("Downloading RDF resources", 100);
+    	monitor.beginTask("Saving stores as HTML", 100);
     	monitor.worked(1);
 
     	StringWriter writer = new StringWriter();
@@ -234,8 +231,19 @@ public class IcebearManager implements IBioclipseManager {
     	pWriter.println("  </head>");
     	pWriter.println("<body>");
     	pWriter.println("<h1>Isbjørn Report</h1>");
-    	// now, the next should of course use an extension point, but this will have to do for now...
-    	useIcebearPowers(mol, pWriter, null, monitor);
+    	for (IRDFStore store : stores) {
+    		List<String> objects = rdf.getForPredicate(
+    			store, "http://www.bioclipse.org/PrimaryObject", "http://www.bioclipse.org/hasURI"
+    		);
+    		for (String primObject : objects) {
+				try {
+	    			URI uri = new URI(primObject);
+	    			printFoundInformation(pWriter, store, uri);
+				} catch (URISyntaxException e) {
+					logger.debug("Unexpected primary object URIL " + e.getMessage());
+				}
+    		}
+    	}
     	pWriter.println("<html>");
     	pWriter.println("</body>");
     	pWriter.println("</html>");
@@ -264,107 +272,6 @@ public class IcebearManager implements IBioclipseManager {
     	
     	return target;
     }
-
-    public IFile findInfo( String uri, IFile target, IProgressMonitor monitor) throws BioclipseException, CoreException {
-    	if (!bioclipse.isOnline())
-    		throw new BioclipseException("Searching information on the web requires an active internet connection.");
-
-    	if (monitor == null) monitor = new NullProgressMonitor();
-    	monitor.beginTask("Downloading RDF resources", 100);
-    	monitor.worked(1);
-
-    	StringWriter writer = new StringWriter();
-    	PrintWriter pWriter = new PrintWriter(writer);
-    	
-    	pWriter.println("<html>");
-    	pWriter.println("  <head>");
-    	pWriter.println("  <title>Isbjørn Report</title>");
-    	pWriter.println("  <meta http-equiv=\"Content-Type\" content=\"text/html;charset=utf-8\">");
-    	pWriter.println("  <style type=\"text/css\">");
-    	pWriter.println("    body {");
-    	pWriter.println("      font-family: Arial, Verdana, Sans-serif;");
-    	pWriter.println("      a:link {color:black;} ");
-    	pWriter.println("      a:hover {color:black; text-decoration:underline;} ");
-    	pWriter.println("      a:visited {color:black;} ");
-    	pWriter.println("    }");
-    	pWriter.println("  </style>");
-    	pWriter.println("  </head>");
-    	pWriter.println("<body>");
-    	pWriter.println("<h1>Isbjørn Report</h1>");
-    	// now, the next should of course use an extension point, but this will have to do for now...
-    	useIcebearPowers(uri, pWriter, null, monitor);
-    	pWriter.println("<html>");
-    	pWriter.println("</body>");
-    	pWriter.println("</html>");
-    	pWriter.flush();
-
-    	try {
-    		if (target.exists()) {
-    			target.setContents(
-                    new ByteArrayInputStream(writer.toString()
-                        .getBytes("UTF-8")),
-                        false,
-                        true, // overwrite
-                        monitor
-                );
-            } else {
-            	target.create(
-            		new ByteArrayInputStream(writer.toString()
-            			.getBytes("UTF-8")),
-           			false,
- 					monitor
-            	);
-            }
-    	} catch (Exception encodingExeption) {
-    		throw new BioclipseException("Error encoding problem: " + encodingExeption.getMessage(), encodingExeption);
-    	}
-    	
-    	return target;
-    }
-
-    private void useIcebearPowers(IMolecule mol, PrintWriter pWriter, List<String> alreadyDone, IProgressMonitor monitor)
-	throws BioclipseException, CoreException {
-		if (alreadyDone == null) alreadyDone = new ArrayList<String>();
-		alreadyDone.add("http://bio2rdf.org/chebi:15377"); // blacklist water
-		// so, what are the isbjørn powers then?
-		// 1. use the InChI to get URIs
-		ICDKMolecule cdkMol = cdk.asCDKMolecule(mol);
-		String inchi = cdkMol.getInChI(Property.USE_CACHED_OR_CALCULATED);
-		String uri = "http://rdf.openmolecules.net/?" + inchi;
-		useIcebearPowers(uri, pWriter, alreadyDone, monitor);
-		// 2. also do the non-standard InChI
-		inchi = inchi.replace("=1S/", "=1/");
-		uri = "http://rdf.openmolecules.net/?" + inchi;
-		useIcebearPowers(uri, pWriter, alreadyDone, monitor);
-	}
-
-	private void useIcebearPowers(String uriString, PrintWriter pWriter, List<String> alreadyDone, IProgressMonitor monitor)
-	throws BioclipseException, CoreException {
-		if (alreadyDone == null) alreadyDone = new ArrayList<String>();
-		try {
-			URI ronURI = new URI(uriString);
-			useUniveRsalIcebearPowers(pWriter, ronURI, alreadyDone, monitor);
-		} catch (URISyntaxException exception) {
-			throw new BioclipseException("Something wrong with the URI: " + exception.getMessage(), exception);
-		}
-	}
-
-	@SuppressWarnings("unused")
-	private void useUniveRsalIcebearPowers(PrintWriter pWriter, URI uri, List<String> alreadyDone, IProgressMonitor monitor) {
-		final List<IRDFStore> stores = new ArrayList<IRDFStore>();
-		IReturner<IRDFStore> storesCatcher = new IReturner<IRDFStore>() {
-			@Override public void partialReturn(IRDFStore object) {
-				stores.add(object);
-			}
-			@Override public void completeReturn(IRDFStore object) {
-				stores.add(object);
-			}
-		};
-		for (IRDFStore store : stores) {
-			printFoundInformation(pWriter, store, uri);
-			monitor.worked(1);
-		}
-	}
 
 	private String stripDataType(String id) {
 		if (id.contains("^^"))
