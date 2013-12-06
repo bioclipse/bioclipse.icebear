@@ -10,9 +10,9 @@
 package net.bioclipse.icebear.extractors.properties;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-
-import com.hp.hpl.jena.vocabulary.RDFS;
+import java.util.Map;
 
 import net.bioclipse.core.domain.StringMatrix;
 import net.bioclipse.icebear.business.Entry;
@@ -35,30 +35,77 @@ public class SioExtractor extends AbstractExtractor implements IPropertyExtracto
 	public List<Entry> extractProperties(IRDFStore store, String resource) {
 		List<Entry> props = new ArrayList<Entry>();
 
+		List<String> attributes = new ArrayList<String>();
 		for (String hasAttribute : SIO_HAS_ATTRIBUTE) {
-			for (String hasValue : SIO_HAS_VALUE) {
-				// get SIO properties
-				String sparql =
-					"PREFIX sio: <http://semanticscience.org/resource/>\n" +
-					"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n" +
-					"SELECT ?label ?desc ?value WHERE {" +
-					"  <" + resource + "> <" + hasAttribute + "> ?property ." +
-					"  ?property <" + hasValue + "> ?value ." +
-					"  OPTIONAL { ?property a ?desc . } " +
-					"  OPTIONAL { ?property rdfs:label ?label . }" +
-					"}";
-				StringMatrix results = sparql(store, sparql);
-				for (int i=1; i<=results.getRowCount(); i++) {
-					String type = "NA";
-					if (results.hasColumn("label")) {
-						type = results.get(i, "label");
-					} else if (results.get(i, "desc") != null) {
-						type = results.get(i, "desc");
-					}
-					props.add(new Entry(resource, type, RDFS.label.toString(), results.get(i, "value")));			
-				}
+			// get SIO properties
+			String sparql =
+				"SELECT ?attribute WHERE {" +
+				"  <" + resource + "> <" + hasAttribute + "> ?attribute ." +
+				"}";
+			StringMatrix results = sparql(store, sparql);
+			if (results.hasColumn("attribute")) attributes = results.getColumn("attribute");
+		}
+		for (String attribute : attributes) { // I have attributes to explore
+			boolean gotValues = findProperties(store, resource, props, attribute);
+			if (!gotValues) {
+				System.out.println("Desc resource: " + attribute);
+		    	// try to get new results, only if we do not already have results
+		    	getAdditionalTriples(store, attribute);
+		    	findProperties(store, resource, props, attribute);
+		    	try {
+		    		Thread.sleep(50); // be a bit friendly to PubChem
+		    	} catch (InterruptedException e) {}
 			}
 		}
 		return props;
+	}
+
+	private boolean findProperties(IRDFStore store, String resource,
+			List<Entry> props, String attribute) {
+		boolean gotValues = false;
+		for (String hasValue : SIO_HAS_VALUE) {
+		  	String sparql =
+		        "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n" +
+		        "SELECT ?type ?value ?label WHERE {" +
+		  		"  <" + attribute + "> <" + hasValue + "> ?value ;" +
+		  		"    a ?type . " +
+		  		"  OPTIONAL { <" + attribute + "> rdfs:label ?label . }" +
+		  		"}";
+		  	StringMatrix descResults = sparql(store, sparql);
+		  	for (int j=1; j<=descResults.getRowCount(); j++) {
+		  		String type = descResults.get(j, "type");
+		  		if (descResults.hasColumn("label")) {
+		  			String label = descResults.get(j, "label");
+		  			props.add(new Entry(resource, label, fullURI(type), descResults.get(j, "value")));
+		  		} else {
+		  			props.add(new Entry(resource, type, fullURI(type), descResults.get(j, "value")));
+		  		}
+		  		gotValues = true;
+		  	}
+		}
+		return gotValues;
+	}
+
+	private String fullURI(String type) {
+		if (type.startsWith("resource:")) {
+			return "http://semanticscience.org/resource/" + type.substring(9);
+		}
+		return type;
+	}
+
+	Map<String,String> extraHeaders = new HashMap<String, String>() {
+		private static final long serialVersionUID = 2825983879781792266L;
+	{
+	  put("Content-Type", "application/rdf+xml");
+	  put("Accept", "application/rdf+xml"); // Both Accept and Content-Type are needed for PubChem 
+	}};
+
+	protected void getAdditionalTriples(IRDFStore store, String resource) {
+		try {
+			rdf.importURL(store, resource, extraHeaders, null);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }

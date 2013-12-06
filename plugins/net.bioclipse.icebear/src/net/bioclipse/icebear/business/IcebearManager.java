@@ -35,13 +35,11 @@ import net.bioclipse.icebear.extractors.links.OwlEquivalentClassExtractor;
 import net.bioclipse.icebear.extractors.links.OwlSameAsExtractor;
 import net.bioclipse.icebear.extractors.links.SkosExactMatchExtractor;
 import net.bioclipse.icebear.extractors.properties.ChemAxiomExtractor;
-import net.bioclipse.icebear.extractors.properties.ChemInfExtractor;
 import net.bioclipse.icebear.extractors.properties.DBPediaExtractor;
 import net.bioclipse.icebear.extractors.properties.DublinCoreExtractor;
 import net.bioclipse.icebear.extractors.properties.FoafExtractor;
 import net.bioclipse.icebear.extractors.properties.FreebaseExtractor;
 import net.bioclipse.icebear.extractors.properties.OpenMoleculesExtractor;
-import net.bioclipse.icebear.extractors.properties.PubChemRDFExtractor;
 import net.bioclipse.icebear.extractors.properties.RdfsExtractor;
 import net.bioclipse.icebear.extractors.properties.SioExtractor;
 import net.bioclipse.icebear.extractors.properties.SkosExtractor;
@@ -94,6 +92,32 @@ public class IcebearManager implements IBioclipseManager {
 		put("http://bio2rdf.org/drugbank_drugtype:smallMolecule", "small molecule");
 		put("http://purl.obolibrary.org/obo/CHEBI_23367", "molecular entity");
 		put("http://www.opentox.org/api/1.1#Compound", "compound");
+		put("http://semanticscience.org/resource/CHEMINF_000113", "InChI");
+		put("http://semanticscience.org/resource/CHEMINF_000140", "PubChem CID");
+		put("http://semanticscience.org/resource/CHEMINF_000334", "molecular weight");
+		put("http://semanticscience.org/resource/CHEMINF_000335", "molecular formula");
+		put("http://semanticscience.org/resource/CHEMINF_000336", "total formal charge");
+		put("http://semanticscience.org/resource/CHEMINF_000337", "monoisotopic mass");
+		put("http://semanticscience.org/resource/CHEMINF_000338", "exact mass");
+		put("http://semanticscience.org/resource/CHEMINF_000369", "covalent unit count");
+		put("http://semanticscience.org/resource/CHEMINF_000370", "defined atom stereocenter count");
+		put("http://semanticscience.org/resource/CHEMINF_000371", "defined bond stereocenter count");
+		put("http://semanticscience.org/resource/CHEMINF_000372", "isotope atom count");
+		put("http://semanticscience.org/resource/CHEMINF_000373", "heavy atom count");
+		put("http://semanticscience.org/resource/CHEMINF_000374", "undefined atom stereocenter count");
+		put("http://semanticscience.org/resource/CHEMINF_000375", "undefined bond stereocenter count");
+		put("http://semanticscience.org/resource/CHEMINF_000376", "canonical smiles");
+		put("http://semanticscience.org/resource/CHEMINF_000379", "isomeric SMILES");
+		put("http://semanticscience.org/resource/CHEMINF_000382", "IUPAC Name");
+		put("http://semanticscience.org/resource/CHEMINF_000387", "hydrogen bond donor count");
+		put("http://semanticscience.org/resource/CHEMINF_000388", "hydrogen bond acceptor count");
+		put("http://semanticscience.org/resource/CHEMINF_000389", "rotatable bond count");
+		put("http://semanticscience.org/resource/CHEMINF_000390", "structure complexity");
+		put("http://semanticscience.org/resource/CHEMINF_000391", "tautomer count");
+		put("http://semanticscience.org/resource/CHEMINF_000392", "TPSA");
+		put("http://semanticscience.org/resource/CHEMINF_000395", "XlogP3");
+		put("http://semanticscience.org/resource/CHEMINF_000396", "InChI (1.0.4)");
+		put("http://semanticscience.org/resource/CHEMINF_000399", "InChIKey (1.0.4)");
 
 		// and also ignore often used things we like to ignore
 		ignore("http://bio2rdf.org/obo_resource:term");
@@ -119,13 +143,11 @@ public class IcebearManager implements IBioclipseManager {
 		add(new DublinCoreExtractor());
 		add(new FoafExtractor());
 		add(new SkosExtractor());
-		add(new ChemInfExtractor());
 		add(new ChemAxiomExtractor());
 		add(new SioExtractor());
 		add(new OpenMoleculesExtractor());
 		add(new DBPediaExtractor());
 		add(new FreebaseExtractor());
-		add(new PubChemRDFExtractor());
 	}};
 	private List<INextURIExtractor> spiders = new ArrayList<INextURIExtractor>() {
 		private static final long serialVersionUID = 7089854109617759948L; {
@@ -414,7 +436,15 @@ public class IcebearManager implements IBioclipseManager {
 		pWriter.println("<table border='0'>");
 		for (Entry key : theRest) {
 			pWriter.println("  <tr>");
-			pWriter.println("    <td valign=\"top\"><b>" + key.predicateLabel + "</b></td>");
+			String label = key.predicateLabel;
+			System.out.println("predicateLabel: " + key.predicateLabel);
+			System.out.println("predicate: " + key.predicate);
+			if (resourceMap.containsKey(key.predicate)) {
+				label = resourceMap.get(key.predicate);
+			} else {
+				logger.debug("No label for: " + key.predicate);
+			}
+			pWriter.println("    <td valign=\"top\"><b>" + label + "</b></td>");
 			String property = stripDataType(key.object);
 			pWriter.println("    <td valign=\"top\">" + property + "</td>");
 			pWriter.println("  </tr>");
