@@ -105,7 +105,7 @@ public class SioExtractor extends AbstractExtractor implements IPropertyExtracto
 			rdf.importURL(store, resource, extraHeaders, null);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("Cannot download " + resource + " due to: " + e.getMessage());
 		}
 	}
 }
