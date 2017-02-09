@@ -1,4 +1,4 @@
-/* Copyright (c) 2012  Egon Willighagen <egon.willighagen@gmail.com>
+/* Copyright (c) 2012-2017  Egon Willighagen <egon.willighagen@gmail.com>
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -12,13 +12,13 @@ package net.bioclipse.icebear.extractors.properties;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.hp.hpl.jena.vocabulary.RDFS;
+
 import net.bioclipse.icebear.business.Entry;
 import net.bioclipse.icebear.business.Fields;
 import net.bioclipse.icebear.extractors.AbstractExtractor;
 import net.bioclipse.icebear.extractors.IPropertyExtractor;
 import net.bioclipse.rdf.business.IRDFStore;
-
-import com.hp.hpl.jena.vocabulary.RDFS;
 
 public class RdfsExtractor extends AbstractExtractor implements IPropertyExtractor {
 

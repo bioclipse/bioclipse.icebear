@@ -1,4 +1,4 @@
-/* Copyright (c) 2012  Egon Willighagen <egon.willighagen@gmail.com>
+/* Copyright (c) 2012-2017  Egon Willighagen <egon.willighagen@gmail.com>
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -21,6 +21,17 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.apache.log4j.Logger;
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
+
+import com.hp.hpl.jena.vocabulary.DC;
+import com.hp.hpl.jena.vocabulary.DC_10;
+import com.hp.hpl.jena.vocabulary.DC_11;
+import com.hp.hpl.jena.vocabulary.RDFS;
 
 import net.bioclipse.business.BioclipsePlatformManager;
 import net.bioclipse.cdk.business.CDKManager;
@@ -47,17 +58,6 @@ import net.bioclipse.jobs.IReturner;
 import net.bioclipse.managers.business.IBioclipseManager;
 import net.bioclipse.rdf.business.IRDFStore;
 import net.bioclipse.rdf.business.RDFManager;
-
-import org.apache.log4j.Logger;
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.NullProgressMonitor;
-
-import com.hp.hpl.jena.vocabulary.DC;
-import com.hp.hpl.jena.vocabulary.DC_10;
-import com.hp.hpl.jena.vocabulary.DC_11;
-import com.hp.hpl.jena.vocabulary.RDFS;
 
 public class IcebearManager implements IBioclipseManager {
 
